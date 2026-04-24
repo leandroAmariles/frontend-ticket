@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Use Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Lint
+      run: npm run lint --if-present
+
+    - name: Run tests (headless)
+      run: |
+        # Run tests in CI mode producing coverage files
+        npm test -- --watch=false --browsers=ChromeHeadless --code-coverage || exit 1
+
+    - name: Check coverage threshold (80%)
+      run: node ./tools/check-coverage.js
+
+    - name: Upload coverage artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage || coverage/**
+
