@@ -1,0 +1,18 @@
+import { Component, Input } from '@angular/core';
+import { Ticket } from '../../models';
+
+@Component({
+  selector: 'app-ticket-row',
+  template: `<div class="ticket-row">{{ ticket?.title }}</div>`,
+  styles: [
+    `
+      .ticket-row {
+        padding: 8px;
+      }
+    `,
+  ],
+})
+export class TicketRowComponent {
+  @Input() ticket: Ticket | null = null;
+}
+

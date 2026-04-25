@@ -1,0 +1,110 @@
+.tickets-table-wrapper {
+  width: 100%;
+  overflow: visible;
+}
+
+.tickets-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    font-weight: 600;
+    background-color: #f5f5f5;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 2px solid #ddd;
+  }
+
+  td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+  }
+
+  tr:hover {
+    background-color: #fafafa;
+  }
+}
+
+.id-cell {
+  font-family: monospace;
+  font-size: 12px;
+  color: #999;
+}
+
+.title-cell {
+  font-weight: 500;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.priority-cell {
+  .priority-low {
+    color: #4caf50;
+  }
+
+  .priority-medium {
+    color: #ff9800;
+  }
+
+  .priority-high {
+    color: #f44336;
+  }
+}
+
+.status-cell {
+  .status-open {
+    color: #2196f3;
+  }
+
+  .status-in_progress {
+    color: #ff9800;
+  }
+
+  .status-closed {
+    color: #4caf50;
+  }
+}
+
+.assigned-to-cell,
+.created-at-cell {
+  color: #666;
+  font-size: 14px;
+}
+
+::ng-deep {
+  .mat-paginator {
+    background-color: #fafafa;
+    border-top: 1px solid #ddd;
+  }
+
+  .mat-sort-header-button {
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .tickets-table {
+    td {
+      padding: 8px;
+    }
+  }
+
+  .title-cell {
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tickets-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .tickets-table {
+    min-width: 600px;
+  }
+}
+

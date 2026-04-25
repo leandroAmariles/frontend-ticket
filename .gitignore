@@ -1,0 +1,61 @@
+# Node.js / npm
+node_modules/
+npm-debug.log
+npm-error.log
+*.log
+.npm
+
+# Angular
+dist/
+build/
+.angular/
+
+# Development
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Testing
+coverage/
+.nyc_output/
+lcov.info
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+dist/
+
+# Build artifacts
+dist/
+*.js.bak
+
+# Logs
+logs/
+*.log
+
+# lock files (use pnpm-lock.yaml for pnpm)
+package-lock.json
+yarn.lock
+

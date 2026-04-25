@@ -1,0 +1,44 @@
+<div class="ticket-filters" [formGroup]="filterForm">
+  <div class="filters-container">
+    <!-- Priority Filter -->
+    <mat-form-field class="filter-field" appearance="outline">
+      <mat-label>Priority</mat-label>
+      <mat-select
+        formControlName="priority"
+        (selectionChange)="onFilterChange()"
+        data-testid="filter-priority"
+        aria-label="Filter by priority"
+      >
+        <mat-option *ngFor="let option of priorityOptions" [value]="option.value">
+          {{ option.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Status Filter -->
+    <mat-form-field class="filter-field" appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select
+        formControlName="status"
+        (selectionChange)="onFilterChange()"
+        data-testid="filter-status"
+        aria-label="Filter by status"
+      >
+        <mat-option *ngFor="let option of statusOptions" [value]="option.value">
+          {{ option.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Clear Filters Button -->
+    <button
+      mat-stroked-button
+      (click)="clearFilters()"
+      data-testid="btn-clear-filters"
+      aria-label="Clear all filters"
+    >
+      Clear Filters
+    </button>
+  </div>
+</div>
+

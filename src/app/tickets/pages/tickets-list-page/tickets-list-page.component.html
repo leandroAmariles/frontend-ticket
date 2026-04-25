@@ -1,0 +1,45 @@
+<div class="tickets-list-page">
+  <!-- Header with title and CTA -->
+  <div class="page-header">
+    <h1>Support Tickets</h1>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="navigateToCreate()"
+      data-testid="btn-new-ticket"
+      class="btn-new-ticket"
+    >
+      + New Ticket
+    </button>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error$ | async as error" class="error-message">
+    <p>{{ error }}</p>
+    <button mat-button (click)="refresh()">Retry</button>
+  </div>
+
+  <!-- Filters -->
+  <app-ticket-filters
+    (filtersChange)="onFiltersChange($event)"
+  ></app-ticket-filters>
+
+  <!-- Loading state -->
+  <div *ngIf="loading$ | async" class="loading-state">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading tickets...</p>
+  </div>
+
+  <!-- Tickets table -->
+  <div *ngIf="!(loading$ | async)" class="table-container">
+    <app-tickets-table
+      [tickets]="(tickets$ | async) || []"
+      [meta]="(meta$ | async) || null"
+      (pageChange)="onPageChange($event)"
+      (sortChange)="onSortChange($event)"
+      [currentPage]="currentParams.page || 1"
+      [pageSize]="currentParams.page_size || 25"
+    ></app-tickets-table>
+  </div>
+</div>
+

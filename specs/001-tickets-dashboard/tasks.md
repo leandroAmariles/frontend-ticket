@@ -25,11 +25,11 @@ Nota: Si falta alguna configuración de repo (linters, CI), las tareas de Founda
 
 Propósito: Preparar módulo feature, imports de UI y modelos según plan.md y data-model.md.
 
-- [ ] T001 Crear módulo feature y rutas lazy: C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\tickets.module.ts y C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\tickets-routing.module.ts (definir rutas /tickets y /tickets/new)
-- [ ] T002 [P] Importar y configurar Angular Material modules (MatTableModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatSelectModule, MatButtonModule) en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\tickets.module.ts
-- [ ] T003 [P] Crear interfaces TypeScript desde data-model.md en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\models\index.ts (exportar Ticket, User, PaginationMeta)
-- [ ] T004 [P] Añadir configuración de base API y referencia en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\environments\environment.ts (agregar apiBaseUrl y flags de requery) y documentar uso
-- [ ] T005 [P] Crear transformadores para mapeo UI↔API y formateo de fecha en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\utils\transformers.ts (mapApiTicketToUi, mapCreateFormToApi, label mappings)
+- [X] T001 Crear módulo feature y rutas lazy: C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\tickets.module.ts y C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\tickets-routing.module.ts (definir rutas /tickets y /tickets/new)
+- [X] T002 [P] Importar y configurar Angular Material modules (MatTableModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatSelectModule, MatButtonModule) en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\tickets.module.ts
+- [X] T003 [P] Crear interfaces TypeScript desde data-model.md en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\models\index.ts (exportar Ticket, User, PaginationMeta)
+- [X] T004 [P] Añadir configuración de base API y referencia en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\environments\environment.ts (agregar apiBaseUrl y flags de requery) y documentar uso
+- [X] T005 [P] Crear transformadores para mapeo UI↔API y formateo de fecha en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\utils\transformers.ts (mapApiTicketToUi, mapCreateFormToApi, label mappings)
 
 ---
 
@@ -37,14 +37,14 @@ Propósito: Preparar módulo feature, imports de UI y modelos según plan.md y d
 
 Propósito: Implementar servicios core, interceptores y scaffolds de test necesarios para las User Stories.
 
-- [ ] T006 Implementar interceptor HTTP de autorización que adjunte Authorization: Bearer <token> en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\core\interceptors\auth.interceptor.ts (registrar provider en AppModule)
-- [ ] T007 Implementar servicio centralizado de manejo de errores en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\core\services\error-handler.service.ts y registrar en AppModule
-- [ ] T008 Implementar cliente API de tickets en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-api.service.ts con métodos listTickets(params) y createTicket(payload) conforme a contracts/tickets-api.md
-- [ ] T009 Implementar tickets-state.service en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-state.service.ts (exponer tickets$, refresh(params), getTicketById(id)) y soportar cancelación/debounce
-- [ ] T010 Añadir scaffold de tests unitarios (Jest + Angular Testing Library) para el módulo tickets en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\setup.test.ts (configurar mocks globales si procede)
-- [ ] T011 Crear scaffold de e2e (Cypress) para tickets en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\e2e\src\tickets\dashboard.spec.ts y asegurar config baseUrl en cypress.json o cypress.config.ts
-- [ ] T012 [BLOCKING] Reconciliar y publicar contrato API canónico: actualizar specs/001-tickets-dashboard/contracts/tickets-api.md y confirmar con backend (documentar resultado en contracts/tickets-api.md)
-- [ ] T013 Implementar transformadores y tests unitarios que validen mapApiTicketToUi y mapCreateFormToApi en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\utils\transformers.ts y tests en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\unit\transformers.spec.ts
+- [X] T006 Implementar interceptor HTTP de autorización que adjunte Authorization: Bearer <token> en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\core\interceptors\auth.interceptor.ts (registrar provider en AppModule)
+- [X] T007 Implementar servicio centralizado de manejo de errores en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\core\services\error-handler.service.ts y registrar en AppModule
+- [X] T008 Implementar cliente API de tickets en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-api.service.ts con métodos listTickets(params) y createTicket(payload) conforme a contracts/tickets-api.md
+- [X] T009 Implementar tickets-state.service en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-state.service.ts (exponer tickets$, refresh(params), getTicketById(id)) y soportar cancelación/debounce
+- [X] T010 Añadir scaffold de tests unitarios (Jest + Angular Testing Library) para el módulo tickets en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\setup.test.ts (configurar mocks globales si procede)
+- [X] T011 Crear scaffold de e2e (Cypress) para tickets en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\e2e\src\tickets\dashboard.spec.ts y asegurar config baseUrl en cypress.json o cypress.config.ts
+- [X] T012 [BLOCKING] Reconciliar y publicar contrato API canónico: actualizar specs/001-tickets-dashboard/contracts/tickets-api.md y confirmar con backend (documentar resultado en contracts/tickets-api.md)
+- [X] T013 Implementar transformadores y tests unitarios que validen mapApiTicketToUi y mapCreateFormToApi en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\utils\transformers.ts y tests en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\unit\transformers.spec.ts
 
 ---
 
@@ -56,19 +56,19 @@ Independent test: unit + integration tests para servicios y componentes; Cypress
 
 ### Tests (TDD) para US1
 
-- [ ] T014 [P] [US1] Crear test de contrato GET /tickets en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\contract\get-tickets.spec.ts (verificar meta e items schema)
-- [ ] T015 [P] [US1] Crear tests unitarios para tickets-api.service en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\unit\tickets-api.spec.ts (validar params, mapping y errores)
+- [X] T014 [P] [US1] Crear test de contrato GET /tickets en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\contract\get-tickets.spec.ts (verificar meta e items schema)
+- [X] T015 [P] [US1] Crear tests unitarios para tickets-api.service en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\unit\tickets-api.spec.ts (validar params, mapping y errores)
 
 ### Implementación para US1
 
-- [ ] T016 [US1] Crear componente TicketsListPage en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\tickets-list-page\tickets-list-page.component.ts, .html, .scss (ruta /tickets)
-- [ ] T017 [US1] Implementar TicketsTableComponent con MatTable/MatPaginator/MatSort en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\tickets-table\tickets-table.component.ts, .html, .scss (soporta selector 25/50)
-- [ ] T018 [P] [US1] Implementar TicketFiltersComponent en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\ticket-filters\ticket-filters.component.ts, .html, .scss (priority/status con opción 'All')
-- [ ] T019 [US1] Añadir CTA "New Ticket" en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\tickets-list-page\tickets-list-page.component.html apuntando a /tickets/new
-- [ ] T020 [US1] Conectar listing con tickets-state.service y tickets-api.service, establecer pageSize por defecto 25 en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\tickets-list-page\tickets-list-page.component.ts
-- [ ] T021 [US1] Usar transformers para formateo de fecha y mapeo de etiquetas en plantillas en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\utils\transformers.ts
-- [ ] T022 [US1] Crear test de integración unitario para la UI del listado en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\integration\listing.spec.ts (mock tickets-state.service)
-- [ ] T023 [US1] Crear Cypress e2e que POSTea un ticket y verifica su aparición en /tickets en ≤5s en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\e2e\src\tickets\create-and-reflect.spec.ts (dependencia: T011)
+- [X] T016 [US1] Crear componente TicketsListPage en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\tickets-list-page\tickets-list-page.component.ts, .html, .scss (ruta /tickets)
+- [X] T017 [US1] Implementar TicketsTableComponent con MatTable/MatPaginator/MatSort en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\tickets-table\tickets-table.component.ts, .html, .scss (soporta selector 25/50)
+- [X] T018 [P] [US1] Implementar TicketFiltersComponent en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\ticket-filters\ticket-filters.component.ts, .html, .scss (priority/status con opción 'All')
+- [X] T019 [US1] Añadir CTA "New Ticket" en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\tickets-list-page\tickets-list-page.component.html apuntando a /tickets/new
+- [X] T020 [US1] Conectar listing con tickets-state.service y tickets-api.service, establecer pageSize por defecto 25 en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\tickets-list-page\tickets-list-page.component.ts
+- [X] T021 [US1] Usar transformers para formateo de fecha y mapeo de etiquetas en plantillas en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\utils\transformers.ts
+- [X] T022 [US1] Crear test de integración unitario para la UI del listado en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\integration\listing.spec.ts (mock tickets-state.service)
+- [X] T023 [US1] Crear Cypress e2e que POSTea un ticket y verifica su aparición en /tickets en ≤5s en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\e2e\src\tickets\create-and-reflect.spec.ts (dependencia: T011)
 
 Checkpoint: Tras T014–T023, US1 debe ser testeable de forma independiente y considerado MVP si los tests pasan.
 
@@ -80,13 +80,13 @@ Objetivo: /tickets/new página con formulario reactivo para crear tickets (title
 
 Independent test: unit tests de validación, contract test POST /tickets, e2e del flujo de creación.
 
-- [ ] T024 [P] [US2] Crear test de contrato POST /tickets en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\contract\post-ticket.spec.ts
-- [ ] T025 [P] [US2] Crear tests unitarios para validación del formulario en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\unit\create-form.spec.ts
-- [ ] T026 [US2] Crear componente TicketCreatePage en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\ticket-create-page\ticket-create-page.component.ts, .html, .scss (form reactivo)
-- [ ] T027 [US2] Implementar envío del formulario a tickets-api.service.createTicket() y manejo de éxito/errores en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\ticket-create-page\ticket-create-page.component.ts
-- [ ] T028 [US2] Al éxito navegar a /tickets y disparar tickets-state.service.refresh() con re-query/backoff hasta ver el ticket (<=5s) en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-state.service.ts
-- [ ] T029 [US2] Añadir integración/e2e de flujo de creación en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\e2e\src\tickets\create-flow.spec.ts
-- [ ] T030 [US2] Implementar y testear los valores por defecto de re-query en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-state.service.ts (initialInterval=500ms, backoff, maxInterval=2000ms, maxDuration=5s) y tests en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\unit\requery.defaults.spec.ts
+- [X] T024 [P] [US2] Crear test de contrato POST /tickets en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\contract\post-ticket.spec.ts
+- [X] T025 [P] [US2] Crear tests unitarios para validación del formulario en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\unit\create-form.spec.ts
+- [X] T026 [US2] Crear componente TicketCreatePage en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\ticket-create-page\ticket-create-page.component.ts, .html, .scss (form reactivo)
+- [X] T027 [US2] Implementar envío del formulario a tickets-api.service.createTicket() y manejo de éxito/errores en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\ticket-create-page\ticket-create-page.component.ts
+- [X] T028 [US2] Al éxito navegar a /tickets y disparar tickets-state.service.refresh() con re-query/backoff hasta ver el ticket (<=5s) en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-state.service.ts
+- [X] T029 [US2] Añadir integración/e2e de flujo de creación en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\e2e\src\tickets\create-flow.spec.ts
+- [X] T030 [US2] Implementar y testear los valores por defecto de re-query en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-state.service.ts (initialInterval=500ms, backoff, maxInterval=2000ms, maxDuration=5s) y tests en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\unit\requery.defaults.spec.ts
 
 Checkpoint: US2 entrega formulario validado e integrado con backend.
 
@@ -109,7 +109,7 @@ Independent test: unit + integration tests para sort/pagination; e2e para accesi
 
 ## Phase Final: Pulido y aspectos transversales
 
-- [ ] T037 [P] Actualizar docs y quickstart en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\specs\001-tickets-dashboard\quickstart.md (verificar comandos y scripts)
+- [X] T037 [P] Actualizar docs y quickstart en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\specs\001-tickets-dashboard\quickstart.md (verificar comandos y scripts)
 - [ ] T038 [P] Ejecutar linter/formatter y arreglar estilos en nuevos archivos (package.json scripts en la raíz del repo)
 - [ ] T039 [P] Auditoría final de accesibilidad y correcciones; documentar en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\specs\001-tickets-dashboard\accessibility-report.md
 - [ ] T040 Ejecutar matriz completa de tests (unit/integration/e2e) y asegurar coverage >=80% para el nuevo módulo; arreglar fallos

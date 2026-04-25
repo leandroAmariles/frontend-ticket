@@ -1,0 +1,36 @@
+.ticket-filters {
+  padding: 16px 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.filters-container {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-field {
+  min-width: 180px;
+  flex: 0 0 auto;
+}
+
+button {
+  height: 56px;
+}
+
+@media (max-width: 768px) {
+  .filters-container {
+    flex-direction: column;
+  }
+
+  .filter-field {
+    width: 100%;
+  }
+
+  button {
+    width: 100%;
+  }
+}
+
