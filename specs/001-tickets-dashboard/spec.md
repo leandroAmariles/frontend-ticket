@@ -1,174 +1,133 @@
-# Especificación: Tickets Dashboard
+# Specification: Tickets Dashboard — Filters: Deploy Available Values
 
-Nombre corto: tickets-dashboard
+Short name: deploy-filter-values
 
-Resumen
+Summary
 
-Crear una página de dashboard en el frontend que liste tickets de soporte en una tabla con paginación y filtros básicos. La tabla debe mostrar hasta 50 filas correctamente sin desbordes de diseño, permitir ordenación por columnas y filtrado por prioridad y estado. Debe existir un botón claro y prominente "New Ticket" que abra el formulario de creación; los tickets nuevos deben aparecer en el listado en menos de 5 segundos.
+Ensure the dashboard filters deploy (display and populate) the available filter values for ticket lists. Filter controls (priority, status, assignee and other configurable fields) must show the correct and current set of selectable values so users can reliably narrow results. Values should be sourced from the backend or derived from the dataset, cached reasonably for responsiveness, localized for presentation, and resilient when values are missing or very large in cardinality.
 
-Actores
+Actors
 
-- Agente / Usuario autenticado: crea y gestiona (ver) tickets.
-- Lector: usuario que solo consulta la lista de tickets.
+- Agent / Authenticated user: views and manages tickets.
+- Reader: a user who only views tickets.
 
-Alcance
+Scope
 
-Incluye:
+Includes:
 
-- Página de dashboard con una acción primaria prominente: "New Ticket".
- - Tabla paginada de tickets con columnas: id, title, priority, status, assigned_to_id, assigned_to_name, created_at (mostrar etiquetas localizadas en UI; ver mapeo UI↔API).
-- Ordenación por columna (asc/desc) y filtros básicos para priority y status.
-- Soporte de tamaños de página hasta 50 filas (opciones: 25, 50).
+- Populate filter controls with available values for fields used in filtering (e.g., priority, status, assignee).
+- Dynamic refresh of filter values on page load and on explicit refresh action; cache for short duration to improve perceived performance.
+- Display an "All" option to clear a filter and graceful handling when there are no available values for a filter (disabled state or "No values" message).
+- Localize display labels for filter values while preserving canonical internal values.
 
-Excluye:
+Excludes:
 
-- Edición avanzada de tickets desde la tabla (solo lectura en lista; edición vía formulario detallado fuera de alcance).
-- Búsqueda libre o filtros complejos (por ahora solo priority/status).
+- Full faceted search or free-text search (out of scope).
+- Backend changes; assume the backend can provide required data or the frontend can derive values from the returned ticket set.
 
-Requisitos funcionales
+Functional requirements
 
-RF-1: Acciones primarias visibles
+FR-1: Dynamic population of filter values
 
-- El dashboard debe mostrar de forma prominente el botón "New Ticket" y controles de filtrado/ordenación accesibles.
-- Criterio de aceptación: 95% de los usuarios de prueba localizan las acciones primarias (New Ticket, filtros, orden) en ≤10s.
+- Filter controls must populate their option lists from a reliable source on initial page load: either a dedicated backend filter-values resource or by inspecting the current ticket page set when a dedicated endpoint is not available.
+- Acceptance test: When the dashboard loads, each filter control shows options corresponding to the current available values within 500 ms of the UI becoming interactive (excluding network latency allowances for slow links; see assumptions).
 
-RF-2: Creación de ticket
+FR-2: Caching and refresh
 
-- El botón "New Ticket" abre un formulario para crear tickets.
-- Criterio de aceptación: El formulario permite ingresar title, description, priority, status inicial y seleccionar un asignado. Datos emitidos al API deben usar campos canónicos: assigned_to_id (UUID v4 | null) y assigned_to_name (string | null) cuando proceda.
-- Decisión: El formulario abrirá en una página dedicada (/tickets/new). Tras creación, la lista reconsultará datos y mostrará el nuevo ticket en ≤5s (por reconsulta o evento push). El comportamiento de reconsulta deberá documentarse en la implementación (intervalos, backoff ligero y cancelación si procede).
-- **Manejo de errores (Clarificación Q2)**: Si la creación falla (error de red o API), se mostrará un mensaje amigable al usuario manteniendo el formulario abierto para reintentar. No se cerrará ni se redirigirá automáticamente.
+- The UI must cache fetched filter values for a short duration (e.g., during the session) and provide a visible "Refresh filters" control to retrieve updated values on demand.
+- Acceptance test: After a simulated backend change to filter values, using "Refresh filters" updates the options within 2 seconds.
 
-RF-3: Listado, paginación y tamaños de página
+FR-3: Localization and label mapping
 
-- La lista se muestra como tabla paginada en servidor. Tamaño por defecto 25; selector de tamaño con opciones 25 y 50.
-- Criterio de aceptación: La tabla renderiza correctamente 50 filas cuando se selecciona ese tamaño de página sin overflow o degradación UX.
-- **Escala de datos (Clarificación Q1)**: El sistema manejará entre 100 y 1000 tickets totales. No se requiere virtualización avanzada; rendering directo es suficiente.
+- Filter option labels must be localized in the UI; internal canonical values remain unchanged when submitting filters to the backend.
+- Acceptance test: For a known canonical value (e.g., "low"), the UI shows a localized label (e.g., "Low") and sending the filter keeps the canonical value.
 
-RF-4: Ordenación
+FR-4: Large cardinality handling
 
-- Las columnas id, title, priority, status, assigned_to_name, created_at deben ser ordenables; la interacción es mediante clic en cabecera con indicador asc/desc. Para orden por asignado se usará assigned_to_name en la UI y assigned_to_id en requests si procede.
-- Criterio de aceptación: Orden ascendente/descendente funciona y los datos se actualizan en la tabla.
-- **Multi-columna (Clarificación Q5)**: Se permitirá ordenar simultáneamente por múltiples columnas. La UI mostrará indicadores visuales de prioridad de sort (ej.: iconos numéricos o marcas indicando cuál se evalúa primero, segundo, etc.). Clic sucesivo en columnas añade/remueve el criterio de sort.
+- If a filter would show a very large number of options (e.g., >100), present a sensible UX (searchable dropdown, grouped options, or limit with "Show more") to avoid overwhelming the user.
+- Acceptance test: When 250 distinct assignees exist, the assignee filter shows a searchable selector or an initial subset with a clear action to load more.
 
-Aclaración sobre ordenación por asignado:
-- Comportamiento acordado: La UI muestra y permite ordenar por el nombre del asignado (`assigned_to_name`). El API idealmente soportará la misma operación mediante `sort=assigned_to_name:<asc|desc>`.
-- Si el backend no soporta sorting por `assigned_to_name`, el contrato debe indicar la limitación y la UI realizará el ordenamiento del conjunto de resultados recibido (nota: esto puede aplicarse tras la paginación y requiere documentar la limitación de consistencia entre páginas).
-- Para evitar ambigüedades de collation/locale, documentar la collation usada por el backend (ej.: `locale: es-ES`) o acordar que el frontend aplique sort locale-aware cuando realice el ordenamiento.
+FR-5: Empty or missing values
 
-RF-5: Filtrado básico
+- If no values are available for a filter, show a disabled control with a "No values" message and ensure applying such filter is not possible.
+- Acceptance test: When backend returns no statuses, the status filter is disabled and shows "No values".
 
-- Controles para filtrar por priority (low/medium/high) y status (open/in_progress/closed). Filtros ofrecen opción "All" para quitar filtro.
-- Criterio de aceptación: Aplicar filtro reduce el conjunto visible y se mantiene la paginación coherente.
-- **Comportamiento configurable (Clarificación Q4)**: El comportamiento de múltiples filtros (AND vs OR) y persistencia tras crear ticket será configurable por el usuario. Por defecto, AND lógico (ambos filtros deben cumplirse) y persistencia de filtros. Se implementará a través de localStorage o preferencias de usuario para recordar la elección.
+FR-6: Consistency with pagination and server-side filtering
 
-<!-- RF-6 consolidado en RF-2: Nuevo ticket aparece en la lista en ≤5s -->
+- Applying a filter must result in a request that yields a coherent filtered dataset consistent with pagination controls. If the frontend derives values locally, document limitations where server-side aggregation would differ across pages.
+- Acceptance test: Applying a filter reduces visible items and pagination updates to the correct page counts for the returned dataset.
 
-Escenarios de usuario (Acceptance Scenarios)
+FR-7: Loading indicators and accessibility
 
-Escenario 1: Crear y ver nuevo ticket
+- Show clear loading indicators for filters while values are being fetched; controls must remain accessible (keyboard focusable, ARIA attributes).
+- Acceptance test: When filter values are loading, a visible spinner/skeleton for the control is present and controls are reachable by keyboard.
 
-- Dado un agente autenticado en el dashboard
-- Cuando pulsa "New Ticket" y completa el formulario
-- Entonces el sistema crea el ticket y la lista refleja el nuevo registro en ≤5s
+User scenarios (Acceptance Scenarios)
 
-Escenario 2: Ver y navegar páginas
+Scenario 1: Dashboard shows dynamic filter values
 
-- Dado una lista grande de tickets
-- Cuando el usuario cambia a tamaño de página 50 o navega a la página siguiente
-- Entonces la tabla muestra las filas correctas sin errores de layout y los controles de paginación funcionan
+- Given an authenticated agent on the tickets dashboard
+- When the page loads
+- Then the filter controls populate with the available values and are usable within 500 ms of the page becoming interactive
 
-Escenario 3: Ordenar y filtrar
+Scenario 2: User filters by a dynamically loaded value
 
-- Dado la tabla de tickets
-- Cuando el usuario aplica filtro por priority=status y ordena por createdAt
-- Entonces la lista muestra solo los tickets filtrados en el orden solicitado y mantiene la paginación
+- Given filters are populated
+- When the user selects a value in priority and applies it
+- Then the ticket list updates showing only tickets with that priority and pagination reflects the filtered result set
 
-Criterios de éxito (medibles)
+Scenario 3: Refresh filter values after backend change
 
-1. Localización de acciones: 95% de participantes localizan New Ticket y controles (filtros/orden) en ≤10s.
-2. Renderizado masivo: La UI puede renderizar 50 filas en la tabla sin overflow ni degradación perceptible del UX (ver pruebas visuales y manuales).
-3. Propagación rápida: Tickets creados aparecen en la lista en ≤5s.
-4. Responsividad: UI usable en breakpoints comunes (mobile, tablet, desktop) sin pérdida de funcionalidad.
-5. Rendimiento API (non-functional): p95 de peticiones relacionadas con listado de tickets < 200 ms (requiere pruebas de rendimiento y puede ajustarse en planificación).
-6. Accesibilidad: Cumplir con estándares a11y básicos (navegación por teclado, roles ARIA en controles, contraste suficiente).
-7. Indicadores de carga (Clarificación Q3): Skeleton loaders completos en la tabla inicial (simulando 25 filas) y spinner/progress bar visual en acciones de filtrado, paginación y ordenación para feedback de usuario.
+- Given the filter values were cached in the session
+- When the user clicks "Refresh filters" after a backend change
+- Then the filter lists update to include new values within 2 seconds
 
-Entidades clave
+Scenario 4: No values available for a filter
 
- - Ticket: {
-  - id: string (UUID v4) — identificador canónico del ticket en API
-  - title: string
-  - description: string
-  - priority: enum (low, medium, high) — valores canónicos en snake_case
-  - status: enum (open, in_progress, closed) — valores canónicos en snake_case
-  - assigned_to_id: string | null — id del usuario asignado (UUID v4), null si no hay asignado
-  - assigned_to_name: string | null — nombre para mostrar del usuario asignado, null si no hay asignado
-  - created_at: timestamp (ISO 8601 recomendado en API)
-}
-- Usuario: id, nombre, rol
+- Given the backend returns no values for a field
+- When the dashboard renders
+- Then the corresponding filter is disabled and displays "No values" (localized)
 
-API contract and UI mapping
+Success criteria (measurable)
 
- - Backend API usa nombres de campo y valores canónicos en snake_case (ej.: priority: "low"/"medium"/"high"; status: "open"/"in_progress"/"closed").
+1. Filter availability latency: 90% of page loads display populated filter controls within 500 ms of UI interactivity.
+2. Refresh responsiveness: After a backend change, refreshed filter lists update within 2 seconds in 95% of test runs.
+3. Accuracy: Applying any filter reduces the visible results correctly in 100% of acceptance tests (matching expected dataset subsets).
+4. Usability with large sets: For filters with >100 options, 95% of users can find and select an option within 15 seconds using searchable or grouped selectors in usability tests.
+5. Accessibility: Filter controls meet basic a11y checks (keyboard focusable, ARIA labels) in automated accessibility audits.
 
-Clarificación de contratos y mapeo UI↔API
+Key entities
 
-- Campos canónicos del Ticket (API) que el frontend debe consumir/emitir: id, title, description, priority, status, assigned_to_id, assigned_to_name, created_at.
-- Formato de id: UUID v4 (por ejemplo: "3fa85f64-5717-4562-b3fc-2c963f66afa6"). El frontend debe validar este formato en entradas y aceptar null/omisión donde el API lo permita.
-- División de assigned_to para eliminar ambigüedad:
-  - assigned_to_id: identificador del usuario asignado (UUID v4) o null
-  - assigned_to_name: nombre para mostrar del asignado o null
+- Ticket: { id, title, priority, status, assigned_to_id, assigned_to_name, created_at }
+- FilterValue: { field: string, value: string (canonical), label: string (localized), count?: number }
+- User: { id, name, role }
 
-- Mapeo UI↔API y localización:
-  - El API mantiene valores canónicos y no localizados. La UI presenta etiquetas y formatos localizados (ej.: "low" -> "Baja").
-  - Al enviar datos al API, usar siempre los nombres y valores canónicos (assigned_to_id, etc.). Al mostrar en la UI, convertir a etiquetas/localización.
-  - Documentar en el equipo dónde se realiza este mapeo y asegurar pruebas que verifiquen la correspondencia UI↔API.
+Assumptions
 
-Esta sección resuelve la inconsistencia I1 (nombres mixtos camelCase/snake_case) y las ambigüedades A1/A2 sobre el formato de id y el significado del campo assigned_to.
+- The backend can provide either a dedicated source of filter values or the frontend can reliably derive values from listed tickets for common fields.
+- Canonical values are used internally and are stable (e.g., priority: "low"/"medium"/"high"). The UI is responsible for localization of labels.
+- Network performance for typical users is acceptable; tests account for slower connections when measuring latencies.
+- The feature is UI-only; backend changes are out of scope for this ticket.
 
-Restricciones y supuestos
+Dependencies
 
-- Se asume que las APIs para listado (paginado), creación y ordenación existen y respetan el contrato snake_case.
-- Se aplican normas del proyecto: TDD, cobertura mínima en tests, cobertura de pruebas automatizadas en CI.
-- Se prioriza accesibilidad y rendimiento en la implementación.
+- Backend support for returning tickets and, optionally, an endpoint or metadata for available filter values.
+- Shared UI components for dropdowns/selectors and i18n utilities.
 
-Dependencias
+Testing and verification
 
-- Endpoint backend: GET /tickets (paginated, sort, filter), POST /tickets (create).
-- Componentes UI compartidos, estilos y utilidades de i18n del proyecto.
+- Manual acceptance: verify filters populate, filtering updates list and pagination, refresh updates values after backend changes.
+- Usability tests for large-cardinality filters (searchable selector effectiveness).
+- Accessibility checks for keyboard navigation and ARIA support.
 
-Pruebas y criterios de verificación
+Edge cases
 
-- Tests de aceptación manual: crear ticket, verificar aparición en ≤5s; navegar paginación y verificar 50 filas.
-- Pruebas de usabilidad: medir tiempo de localización de acciones (target ≤10s, 95% users).
-- Pruebas de rendimiento: medir p95 de list API y UI render con 50 filas.
-- Pruebas de accesibilidad: keyboard navigation, ARIA labels, contrast checks.
+- Values with identical display labels but different canonical values: show disambiguation (e.g., append id hint) or prevent duplicates in the selector.
+- Rapid backend changes: ensure cache invalidation and user feedback when refresh fails.
 
-Casos límite identificados
-
-- Tickets con campos faltantes (sin assignedTo): mostrar "Unassigned"/localizado en UI.
-- Tickets con títulos muy largos: truncar visualmente con tooltip para texto completo.
-- Paginación en la última página con menos filas: controles deshabilitados adecuadamente.
-
-Asunciones realizadas
-
-- Localización: UI puede mostrar etiquetas en español; los valores internos permanecen snake_case.
-- Tamaño máximo relevante para UX: probar hasta 50 filas por página.
-
-## Clarifications
-
-### Session 2026-04-25
-
-- Q: ¿Cuál es el volumen esperado de tickets en el sistema? → A: 100-1000 tickets totales. Permite rendering directo sin virtualización avanzada.
-- Q: ¿Cómo manejar errores en creación de tickets (fallo de red/API)? → A: Mostrar error amigable manteniendo formulario abierto para reintentar (no cerrar automáticamente).
-- Q: ¿Mostrar skeleton loaders y estados de carga en la tabla? → A: Sí, skeleton loaders completos (25 filas simuladas) + spinner/progress bar en acciones (paginar, filtrar, ordenar).
-- Q: ¿Comportamiento de múltiples filtros (priority + status) y persistencia? → A: Configurable por usuario. Por defecto: AND lógico (ambos filtros deben cumplirse) y persistencia de filtros tras crear ticket. Implementar vía localStorage/preferencias.
-- Q: ¿Ordenación mono-columna o multi-columna? → A: Multi-columna. Permitir ordenar por múltiples criterios simultáneamente con UI visual de prioridades de sort (indicadores numéricos o visuales).
-
-Estado: READY FOR PLANNING
+Status: READY FOR PLANNING
 
 ---
 
-Archivo actualizado por /speckit.clarify
+Generated/updated by /speckit.specify
 
