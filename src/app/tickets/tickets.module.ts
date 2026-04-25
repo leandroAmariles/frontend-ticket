@@ -22,6 +22,9 @@ import { TicketCreatePageComponent } from './pages/ticket-create-page/ticket-cre
 import { TicketsTableComponent } from './components/tickets-table/tickets-table.component';
 import { TicketFiltersComponent } from './components/ticket-filters/ticket-filters.component';
 import { TicketRowComponent } from './components/ticket-row/ticket-row.component';
+import { LoadingSkeletonComponent } from './components/shared/states/loading-skeleton.component';
+import { EmptyStateComponent } from './components/shared/states/empty-state.component';
+import { ErrorStateComponent } from './components/shared/states/error-state.component';
 
 @NgModule({
   declarations: [
@@ -30,6 +33,9 @@ import { TicketRowComponent } from './components/ticket-row/ticket-row.component
     TicketsTableComponent,
     TicketFiltersComponent,
     TicketRowComponent,
+    LoadingSkeletonComponent,
+    EmptyStateComponent,
+    ErrorStateComponent,
   ],
   imports: [
     CommonModule,

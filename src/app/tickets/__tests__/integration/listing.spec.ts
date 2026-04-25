@@ -4,7 +4,7 @@
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 
 import { TicketsListPageComponent } from '../../pages/tickets-list-page/tickets-list-page.component';
@@ -24,41 +24,31 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 describe('TicketsListPage - Integration Tests', () => {
   let component: TicketsListPageComponent;
   let fixture: ComponentFixture<TicketsListPageComponent>;
-  let mockStateService: jasmine.SpyObj<TicketsStateService>;
+  let mockStateService: any;
 
   beforeEach(async () => {
-    mockStateService = jasmine.createSpyObj(
-      'TicketsStateService',
-      ['refresh', 'reset'],
-      {
-        tickets$: of([
-          {
-            id: '1',
-            title: 'Test Ticket 1',
-            description: 'Description 1',
-            priority: 'high',
-            status: 'open',
-            assigned_to_id: null,
-            assigned_to_name: null,
-            created_at: '2026-04-25T10:15:30Z',
-          },
-        ]),
-        loading$: of(false),
-        error$: of(null),
-        meta$: of({
-          total: 1,
-          page: 1,
-          page_size: 25,
-          total_pages: 1,
-        }),
-      }
-    );
+    mockStateService = {
+      refresh: jest.fn(),
+      reset: jest.fn(),
+      tickets$: of([
+        {
+          id: '1',
+          title: 'Test Ticket 1',
+          description: 'Description 1',
+          priority: 'high',
+          status: 'open',
+          assigned_to_id: null,
+          assigned_to_name: null,
+          created_at: '2026-04-25T10:15:30Z',
+        },
+      ]),
+      loading$: of(false),
+      error$: of(null),
+      meta$: of({ total: 1, page: 1, page_size: 25, total_pages: 1 }),
+    } as any;
 
-    mockStateService.refresh.and.returnValue(
-      of({
-        data: [],
-        meta: { total: 0, page: 1, page_size: 25, total_pages: 0 },
-      })
+    mockStateService.refresh.mockReturnValue(
+      of({ data: [], meta: { total: 0, page: 1, page_size: 25, total_pages: 0 } })
     );
 
     await TestBed.configureTestingModule({
@@ -68,7 +58,7 @@ describe('TicketsListPage - Integration Tests', () => {
         TicketFiltersComponent,
       ],
       imports: [
-        BrowserAnimationsModule,
+        NoopAnimationsModule,
         RouterTestingModule,
         ReactiveFormsModule,
         MatTableModule,
@@ -119,7 +109,7 @@ describe('TicketsListPage - Integration Tests', () => {
       component.onPageChange(pageEvent);
 
       expect(mockStateService.refresh).toHaveBeenCalledWith(
-        jasmine.objectContaining({
+        expect.objectContaining({
           page: 2, // pageIndex is 0-based
           page_size: 50,
         })
@@ -135,7 +125,7 @@ describe('TicketsListPage - Integration Tests', () => {
       component.onFiltersChange(filters);
 
       expect(mockStateService.refresh).toHaveBeenCalledWith(
-        jasmine.objectContaining({
+        expect.objectContaining({
           page: 1,
           priority: 'high',
           status: 'open',
@@ -150,7 +140,8 @@ describe('TicketsListPage - Integration Tests', () => {
       const filters = { priority: 'high' };
       component.onFiltersChange(filters);
 
-      const lastCall = mockStateService.refresh.calls.mostRecent()?.args[0];
+      const calls = mockStateService.refresh.mock.calls;
+      const lastCall = calls.length ? calls[calls.length - 1][0] : undefined;
       expect(lastCall?.page).toBe(1);
     });
   });
@@ -159,10 +150,8 @@ describe('TicketsListPage - Integration Tests', () => {
     it('should navigate to create page on New Ticket click', () => {
       fixture.detectChanges();
 
-      const router = TestBed.inject(
-        require('@angular/router').Router
-      );
-      spyOn(router, 'navigate');
+      const router = TestBed.inject(require('@angular/router').Router) as any;
+      jest.spyOn(router, 'navigate');
 
       component.navigateToCreate();
 

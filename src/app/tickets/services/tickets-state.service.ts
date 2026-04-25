@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of, timer } from 'rxjs';
+import { BehaviorSubject, Observable, of, timer, Subject } from 'rxjs';
 import { debounceTime, switchMap, takeUntil, tap, catchError } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
@@ -73,7 +73,8 @@ export class TicketsStateService {
     let elapsedTime = 0;
     const startTime = Date.now();
 
-    return timer(0, currentInterval).pipe(
+    // Start polling after the initial interval (matches test expectations)
+    return timer(currentInterval, currentInterval).pipe(
       switchMap(() => {
         elapsedTime = Date.now() - startTime;
 
@@ -150,7 +151,10 @@ export class TicketsStateService {
   /**
    * Signal to stop re-query polling (e.g., when user navigates away)
    */
-  private stopReQuerySubject = new BehaviorSubject<void>(undefined);
+  // Signal subject to stop re-query polling; start as a Subject so it does not
+  // emit until cancelReQuery() is called. Using BehaviorSubject caused the
+  // signal to emit immediately and stop polling right away.
+  private stopReQuerySubject = new Subject<void>();
 
   private getStopReQuerySignal(): Observable<void> {
     return this.stopReQuerySubject.asObservable();
@@ -172,6 +176,22 @@ export class TicketsStateService {
     this.loadingSubject.next(false);
     this.errorSubject.next(null);
     this.cancelReQuery();
+  }
+
+  /**
+   * Client-side fallback sorting: when backend does not support sorting by a field
+   * (for example assigned_to_name), apply a locale-aware sort to the currently
+   * loaded page of tickets.
+   */
+  applyClientSideSort(field: keyof Ticket, direction: 'asc' | 'desc' = 'asc') {
+    const current = [...this.ticketsSubject.value];
+    current.sort((a: any, b: any) => {
+      const va = (a[field] || '').toString();
+      const vb = (b[field] || '').toString();
+      const cmp = va.localeCompare(vb, 'es', { sensitivity: 'base' });
+      return direction === 'asc' ? cmp : -cmp;
+    });
+    this.ticketsSubject.next(current);
   }
 }
 

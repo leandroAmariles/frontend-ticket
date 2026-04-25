@@ -4,6 +4,9 @@ module.exports = {
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',
     '<rootDir>/dist/',
+    '<rootDir>/e2e/',
+    '<rootDir>/src/test.ts',
+    'setup.test.ts',
   ],
   collectCoverageFrom: [
     'src/**/*.ts',

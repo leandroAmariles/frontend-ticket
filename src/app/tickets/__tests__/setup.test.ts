@@ -5,7 +5,7 @@
 
 import '@testing-library/jest-dom';
 
-// Mock localStorage
+// Mock localStorage and sessionStorage using defineProperty to avoid read-only assignment errors
 const localStorageMock = {
   getItem: jest.fn(),
   setItem: jest.fn(),
@@ -13,9 +13,6 @@ const localStorageMock = {
   clear: jest.fn(),
 };
 
-global.localStorage = localStorageMock as any;
-
-// Mock sessionStorage
 const sessionStorageMock = {
   getItem: jest.fn(),
   setItem: jest.fn(),
@@ -23,7 +20,19 @@ const sessionStorageMock = {
   clear: jest.fn(),
 };
 
-global.sessionStorage = sessionStorageMock as any;
+// Some jsdom/window implementations have read-only properties; use defineProperty to mock safely
+/* eslint-disable @typescript-eslint/no-explicit-any */
+Object.defineProperty(globalThis, 'localStorage', {
+  value: localStorageMock as any,
+  configurable: true,
+  writable: true,
+});
+
+Object.defineProperty(globalThis, 'sessionStorage', {
+  value: sessionStorageMock as any,
+  configurable: true,
+  writable: true,
+});
 
 // Suppress console errors in tests (unless needed for debugging)
 const originalError = console.error;

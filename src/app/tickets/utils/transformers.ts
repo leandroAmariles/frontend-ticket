@@ -61,18 +61,19 @@ export function getStatusLabel(status: string): string {
  * Assumes ISO 8601 UTC format from API
  */
 export function formatDateForDisplay(dateString: string, locale: string = 'es-ES'): string {
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(locale, {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
+  const date = new Date(dateString);
+  // If date is invalid, return original input so tests can assert expected behavior
+  if (isNaN(date.getTime())) {
     return dateString;
   }
+
+  return date.toLocaleDateString(locale, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 /**

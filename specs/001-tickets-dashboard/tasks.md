@@ -98,12 +98,12 @@ Objetivo: Ordenación robusta por columnas, selector de tamaño de página (25/5
 
 Independent test: unit + integration tests para sort/pagination; e2e para accesibilidad.
 
-- [ ] T031 [US3] Implementar selector de page-size (25/50) en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\tickets-table\tickets-table.component.ts y .html
-- [ ] T032 [P] [US3] Implementar manejadores de sort por columna y mapear a query param sort en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\tickets-table\tickets-table.component.ts
-- [ ] T033 [US3] Añadir atributos ARIA y soporte de navegación por teclado en componentes bajo C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\ (tickets-table y ticket-filters)
-- [ ] T034 [P] [US3] Añadir componentes/shared para loading skeleton, empty state y error state en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\shared\states\
-- [ ] T035 [US3] Añadir tests unit/integration para sorting, pagination y accesibilidad en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\integration\sorting-pagination-accessibility.spec.ts
-- [ ] T036 [US3] Implementar fallback de sort en cliente cuando backend no soporte sort por assigned_to_name en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-state.service.ts y añadir tests en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\integration\sorting-fallback.spec.ts
+ - [X] T031 [US3] Implementar selector de page-size (25/50) en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\tickets-table\tickets-table.component.ts y .html
+ - [X] T032 [P] [US3] Implementar manejadores de sort por columna y mapear a query param sort en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\tickets-table\tickets-table.component.ts
+ - [X] T033 [US3] Añadir atributos ARIA y soporte de navegación por teclado en componentes bajo C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\ (tickets-table y ticket-filters)
+ - [X] T034 [P] [US3] Añadir componentes/shared para loading skeleton, empty state y error state en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\shared\states\
+ - [X] T035 [US3] Añadir tests unit/integration para sorting, pagination y accesibilidad en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\integration\sorting-pagination-accessibility.spec.ts
+ - [X] T036 [US3] Implementar fallback de sort en cliente cuando backend no soporte sort por assigned_to_name en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-state.service.ts y añadir tests en C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\integration\sorting-fallback.spec.ts
 
 ---
 
