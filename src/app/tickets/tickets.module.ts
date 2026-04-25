@@ -9,6 +9,7 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 // Routing
 import { TicketsRoutingModule } from './tickets-routing.module';
@@ -41,6 +42,7 @@ import { TicketRowComponent } from './components/ticket-row/ticket-row.component
     MatFormFieldModule,
     MatSelectModule,
     MatButtonModule,
+    MatProgressSpinnerModule,
     // Routing
     TicketsRoutingModule,
   ],

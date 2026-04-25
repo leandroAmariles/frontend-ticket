@@ -70,8 +70,8 @@ export class TicketsListPageComponent implements OnInit, OnDestroy {
   onFiltersChange(filters: { priority?: string; status?: string }): void {
     this.refresh({
       page: 1, // Reset to first page when filters change
-      priority: filters.priority ? filters.priority : undefined,
-      status: filters.status ? filters.status : undefined,
+      priority: filters.priority as any,
+      status: filters.status as any,
     });
   }
 

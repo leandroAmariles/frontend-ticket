@@ -1,0 +1,44 @@
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+    <div class="app-container">
+      <header class="app-header">
+        <h1>Support Tickets</h1>
+      </header>
+      <main class="app-main">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  `,
+  styles: [`
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background-color: #f5f5f5;
+    }
+
+    .app-header {
+      background-color: #1976d2;
+      color: white;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+      h1 {
+        margin: 0;
+        font-size: 24px;
+      }
+    }
+
+    .app-main {
+      flex: 1;
+      padding: 16px;
+    }
+  `]
+})
+export class AppComponent {
+  title = 'Tickets Dashboard';
+}
+
