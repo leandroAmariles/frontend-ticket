@@ -37,16 +37,19 @@ RF-2: Creación de ticket
 - El botón "New Ticket" abre un formulario para crear tickets.
 - Criterio de aceptación: El formulario permite ingresar title, description, priority, status inicial y seleccionar un asignado. Datos emitidos al API deben usar campos canónicos: assigned_to_id (UUID v4 | null) y assigned_to_name (string | null) cuando proceda.
 - Decisión: El formulario abrirá en una página dedicada (/tickets/new). Tras creación, la lista reconsultará datos y mostrará el nuevo ticket en ≤5s (por reconsulta o evento push). El comportamiento de reconsulta deberá documentarse en la implementación (intervalos, backoff ligero y cancelación si procede).
+- **Manejo de errores (Clarificación Q2)**: Si la creación falla (error de red o API), se mostrará un mensaje amigable al usuario manteniendo el formulario abierto para reintentar. No se cerrará ni se redirigirá automáticamente.
 
 RF-3: Listado, paginación y tamaños de página
 
 - La lista se muestra como tabla paginada en servidor. Tamaño por defecto 25; selector de tamaño con opciones 25 y 50.
 - Criterio de aceptación: La tabla renderiza correctamente 50 filas cuando se selecciona ese tamaño de página sin overflow o degradación UX.
+- **Escala de datos (Clarificación Q1)**: El sistema manejará entre 100 y 1000 tickets totales. No se requiere virtualización avanzada; rendering directo es suficiente.
 
 RF-4: Ordenación
 
 - Las columnas id, title, priority, status, assigned_to_name, created_at deben ser ordenables; la interacción es mediante clic en cabecera con indicador asc/desc. Para orden por asignado se usará assigned_to_name en la UI y assigned_to_id en requests si procede.
 - Criterio de aceptación: Orden ascendente/descendente funciona y los datos se actualizan en la tabla.
+- **Multi-columna (Clarificación Q5)**: Se permitirá ordenar simultáneamente por múltiples columnas. La UI mostrará indicadores visuales de prioridad de sort (ej.: iconos numéricos o marcas indicando cuál se evalúa primero, segundo, etc.). Clic sucesivo en columnas añade/remueve el criterio de sort.
 
 Aclaración sobre ordenación por asignado:
 - Comportamiento acordado: La UI muestra y permite ordenar por el nombre del asignado (`assigned_to_name`). El API idealmente soportará la misma operación mediante `sort=assigned_to_name:<asc|desc>`.
@@ -57,6 +60,7 @@ RF-5: Filtrado básico
 
 - Controles para filtrar por priority (low/medium/high) y status (open/in_progress/closed). Filtros ofrecen opción "All" para quitar filtro.
 - Criterio de aceptación: Aplicar filtro reduce el conjunto visible y se mantiene la paginación coherente.
+- **Comportamiento configurable (Clarificación Q4)**: El comportamiento de múltiples filtros (AND vs OR) y persistencia tras crear ticket será configurable por el usuario. Por defecto, AND lógico (ambos filtros deben cumplirse) y persistencia de filtros. Se implementará a través de localStorage o preferencias de usuario para recordar la elección.
 
 <!-- RF-6 consolidado en RF-2: Nuevo ticket aparece en la lista en ≤5s -->
 
@@ -88,6 +92,7 @@ Criterios de éxito (medibles)
 4. Responsividad: UI usable en breakpoints comunes (mobile, tablet, desktop) sin pérdida de funcionalidad.
 5. Rendimiento API (non-functional): p95 de peticiones relacionadas con listado de tickets < 200 ms (requiere pruebas de rendimiento y puede ajustarse en planificación).
 6. Accesibilidad: Cumplir con estándares a11y básicos (navegación por teclado, roles ARIA en controles, contraste suficiente).
+7. Indicadores de carga (Clarificación Q3): Skeleton loaders completos en la tabla inicial (simulando 25 filas) y spinner/progress bar visual en acciones de filtrado, paginación y ordenación para feedback de usuario.
 
 Entidades clave
 
@@ -151,8 +156,19 @@ Asunciones realizadas
 - Localización: UI puede mostrar etiquetas en español; los valores internos permanecen snake_case.
 - Tamaño máximo relevante para UX: probar hasta 50 filas por página.
 
+## Clarifications
+
+### Session 2026-04-25
+
+- Q: ¿Cuál es el volumen esperado de tickets en el sistema? → A: 100-1000 tickets totales. Permite rendering directo sin virtualización avanzada.
+- Q: ¿Cómo manejar errores en creación de tickets (fallo de red/API)? → A: Mostrar error amigable manteniendo formulario abierto para reintentar (no cerrar automáticamente).
+- Q: ¿Mostrar skeleton loaders y estados de carga en la tabla? → A: Sí, skeleton loaders completos (25 filas simuladas) + spinner/progress bar en acciones (paginar, filtrar, ordenar).
+- Q: ¿Comportamiento de múltiples filtros (priority + status) y persistencia? → A: Configurable por usuario. Por defecto: AND lógico (ambos filtros deben cumplirse) y persistencia de filtros tras crear ticket. Implementar vía localStorage/preferencias.
+- Q: ¿Ordenación mono-columna o multi-columna? → A: Multi-columna. Permitir ordenar por múltiples criterios simultáneamente con UI visual de prioridades de sort (indicadores numéricos o visuales).
+
 Estado: READY FOR PLANNING
 
 ---
 
-Archivo actualizado por /speckit.specify
+Archivo actualizado por /speckit.clarify
+
