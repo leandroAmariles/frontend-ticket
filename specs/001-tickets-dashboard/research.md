@@ -42,6 +42,13 @@ Tareas de investigación generadas
 - Confirmar si el backend ofrece fecha de creación y si incluye metadata de paginación.
 - Confirmar límites de pageSize y rate limits.
 
+- Confirmar expectativas de escala (si se esperan >10k usuarios concurrentes o datasets muy grandes).
+
+8) Escala esperada
+- Decision: No se esperan >10k usuarios concurrentes ni datasets masivos para esta feature; la especificación indica 100–1000 tickets totales.
+- Rationale: La sección "Clarifications" del spec especifica explícitamente el volumen esperado (100-1000 tickets). Por tanto, la estrategia de renderizado directo y paginación de servidor es adecuada.
+- Alternatives considered: Preparar la UI para cargas masivas (virtualization, cursor-based pagination) — rechazado por falta de necesidad y complejidad añadida.
+
 Conclusión
 
 Se han resuelto las incertidumbres principales con decisiones que priorizan interoperabilidad, accesibilidad y cumplimiento de la Constitución. La implementación procederá con las especificaciones de API arriba indicadas; se recomienda confirmar detalles menores con el equipo de backend antes de implementar el servicio de integración.

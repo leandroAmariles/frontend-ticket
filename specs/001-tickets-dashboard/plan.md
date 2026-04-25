@@ -35,7 +35,7 @@ When the backend does not provide push/real-time notifications, the frontend wil
 - Tests: unit/integration tests must assert behavior (timing) using virtual timers or mocked timing to validate retries, cancellation, and success path upon eventual consistency.
 
 These defaults are configurable via environment or feature flag but must be the canonical values used by tests (see T026, T058).
-**Scale/Scope**: Feature-level scope (one feature module tickets); expected to handle typical support workloads (no strict user count defined — NEEDS CLARIFICATION if >10k concurrent users expected)
+**Scale/Scope**: Feature-level scope (one feature module tickets); expected to handle 100–1000 tickets total (según la especificación). No se anticipan >10k usuarios concurrentes para este feature; por tanto no se requiere virtualización avanzada en la UI.
 
 ## Constitution Check
 
