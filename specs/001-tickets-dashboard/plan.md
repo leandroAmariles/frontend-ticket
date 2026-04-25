@@ -18,7 +18,23 @@ Crear la página de dashboard de tickets con tabla paginada (25/50), filtros por
 **Target Platform**: Modern browsers (desktop/tablet/mobile responsive)  
 **Project Type**: Web application (frontend)  
 **Performance Goals**: p95 for list API & UI interactions < 200 ms (project non-functional target); perceived snappy UI (skeletons/loading)  
-**Constraints**: Table must render up to 50 rows without layout overflow; API p95 target may require backend tuning; re-query strategy for consistency if no push available  
+**Constraints**: Table must render up to 50 rows without layout overflow; API p95 target may require backend tuning; re-query strategy for consistency if no push available
+
+ 
+
+## Re-query strategy
+
+When the backend does not provide push/real-time notifications, the frontend will use a conservative, testable re-query strategy to surface newly-created tickets within the required ≤5s window. Defaults below should be implemented in `src/app/tickets/services/tickets-state.service.ts` and referenced from tasks/tests:
+
+- Initial poll interval: 500 ms
+- Backoff: exponential doubling (interval = min(interval * 2, maxInterval))
+- Max interval: 2000 ms
+- Max total duration: 5 seconds (stop polling after 5s) or max attempts: 5 (whichever is reached first)
+- Cancel polling when user navigates away from `/tickets` or when component unmounts
+- Abort outstanding requests when cancelled (use AbortController or RxJS takeUntil pattern)
+- Tests: unit/integration tests must assert behavior (timing) using virtual timers or mocked timing to validate retries, cancellation, and success path upon eventual consistency.
+
+These defaults are configurable via environment or feature flag but must be the canonical values used by tests (see T026, T058).
 **Scale/Scope**: Feature-level scope (one feature module tickets); expected to handle typical support workloads (no strict user count defined — NEEDS CLARIFICATION if >10k concurrent users expected)
 
 ## Constitution Check

@@ -38,7 +38,7 @@ Purpose: Implement core services and infra required by all user stories (auth, e
 - [ ] T006 Implement HTTP Authorization interceptor at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\core\interceptors\auth.interceptor.ts to attach Bearer token to outgoing requests (per research.md decision)
 - [ ] T007 Implement centralized error handler service at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\core\services\error-handler.service.ts and register provider in AppModule
 - [ ] T008 Implement tickets API client at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-api.service.ts (methods: listTickets(params), createTicket(payload)) following specs/001-tickets-dashboard/contracts/tickets-api.md
-- [P] T009 Implement tickets state service for caching, refresh and observables at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-state.service.ts (exposes refresh(), tickets$)
+- [ ] T009 Implement tickets state service for caching, refresh and observables at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-state.service.ts (exposes refresh(), tickets$)
 - [ ] T010 Add Jest unit-test scaffold for tickets module and test setup at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\setup.test.ts (ensure Angular Testing Library + Jest available per plan)
 - [ ] T011 Scaffold Cypress e2e spec at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\e2e\src\tickets\dashboard.spec.ts and ensure cypress.json/config references baseUrl
 
@@ -118,6 +118,8 @@ Independent Test: Unit tests for form validation + contract test for POST /ticke
 - [ ] T026 [US2] On success navigate to /tickets and trigger tickets-state.service.refresh() with light backoff until new ticket appears (<=5s) in C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-state.service.ts
 - [ ] T027 [US2] Add integration/e2e test for full create flow at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\e2e\src\tickets\create-flow.spec.ts (if T021 does not fully cover)
 
+- [ ] T058 [US2] Implement and unit-test the re-query defaults in `tickets-state.service.ts` (initialInterval=500ms, backoff, maxInterval=2000ms, maxDuration=5s) and expose configuration points for tests and feature flags. Add unit/integration tests `src/app/tickets/__tests__/unit/requery.defaults.spec.ts`.
+
 Checkpoint: US2 delivers a validated create form and backend integration.
 
 ---
@@ -134,6 +136,8 @@ Independent Test: Unit + integration tests verify sort params and UI; e2e checks
 - [P] T031 [US3] Add loading skeleton, empty state and error state components under C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\shared\states\
 - [ ] T032 [US3] Add unit/integration tests for sorting, pagination and accessibility at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\integration\sorting-pagination-accessibility.spec.ts
 
+- [ ] T055 [US3] Implement client-side fallback sorting when backend does not support requested sort fields (e.g., assigned_to_name). Implement in `src/app/tickets/services/tickets-state.service.ts` and `src/app/tickets/components/tickets-table/tickets-table.component.ts`; document limitations and add unit/integration tests at `src/app/tickets/__tests__/integration/sorting-fallback.spec.ts`.
+
 ---
 
 ## Phase N: Polish & Cross-Cutting Concerns
@@ -142,6 +146,7 @@ Independent Test: Unit + integration tests verify sort params and UI; e2e checks
 - [P] T034 Run linter/formatter and fix style issues for new files (repo root: package.json scripts)
 - [P] T035 Final accessibility audit and fixes (report changes under C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\specs\001-tickets-dashboard\)
 - [ ] T036 Run full test matrix (unit/integration/e2e), ensure coverage >=80% for new module and fix failures
+ - [ ] T056 Add PR checklist/template to enforce Constitution XVI PR deliverables (screenshots/recordings, tests added, coverage diff). Create `.github/PULL_REQUEST_TEMPLATE.md` and update `CONTRIBUTING.md` with instructions; add optional CI check to surface missing artifacts in PR description.
  - [ ] T037 [P] Crear script de rendimiento k6 para GET /tickets en tests/performance/get-tickets-k6.js
    - Criterios de aceptación:
 	 - El archivo tests/performance/get-tickets-k6.js existe y contiene un script k6 que ejecuta GET /tickets usando una URL configurable vía variable de entorno (K6_BASE_URL).
@@ -184,7 +189,7 @@ Independent Test: Unit + integration tests verify sort params and UI; e2e checks
 
 ### Parallel Opportunities
 
-- Tasks explicitly marked [P] can be worked on in parallel where no file conflicts exist (for example: T003, T005, T009, T012, T013, T016, T022, T023, T029, T031, T033–T035).
+ - Tasks explicitly marked [P] can be worked on in parallel where no file conflicts exist (for example: T003, T005, T012, T013, T016, T022, T023, T029, T031, T033–T035).
 
 ---
 
@@ -213,10 +218,10 @@ MVP First:
 
 ## Summary (task counts by phase)
 
-- Total tasks: 36
+- Total tasks: 48
 - Phase 1 (Setup): 5
-- Phase 2 (Foundational): 6
+- Phase 2 (Foundational): 13
 - Phase 3 (US1 MVP): 10
 - Phase 4 (US2): 6
 - Phase 5 (US3): 5
-- Polish & Cross-cutting: 4
+- Polish & Cross-cutting: 9
