@@ -2,124 +2,161 @@
 description: "Tareas para implementar el feature tickets-dashboard"
 ---
 
+## Extension Hooks
+
+**Optional Pre-Hook**: git
+Command: `speckit.git.commit`
+Description: Auto-commit before task generation
+
+Prompt: Commit outstanding changes before task generation?
+To execute: `speckit.git.commit`
+
 # Tasks: tickets-dashboard
 
-Input: specs/001-tickets-dashboard/
-Prerequisites: plan.md (required), spec.md (required), data-model.md, contracts/tickets-api.md
+**Input**: C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\specs\001-tickets-dashboard\
 
 ## Convenciones
 - [P] = Tarea que puede ejecutarse en paralelo (archivos distintos, sin dependencias)
-- Incluir rutas de archivo exactas en cada tarea
+- Todas las tareas deben incluir rutas de archivo exactas (absolutas donde procede)
 
-## Phase 1: Setup (Infraestructura compartida)
+## Phase 1: Setup (Shared Infrastructure)
 
-- [P] T001 [Setup] Crear estructura de directorios del feature
-  - Crear: frontend/src/app/tickets/{components,containers,services} y frontend/src/app/tickets/tickets.module.ts
-  - Ruta: frontend/src/app/tickets/
+Purpose: Prepare Angular feature module, UI dependencies and core models per plan.md and data-model.md
 
-- [P] T002 [Setup] Añadir dependencias si faltan: Angular Material, @angular/flex-layout (si procede)
-  - Archivos: package.json (raíz del frontend)
-
-- [P] T003 [Setup] Configurar linter/formatter según la Constitución del proyecto
-  - Archivos: .eslintrc.json (o tslint), .prettierrc
-
-## Phase 2: Foundational (Bloqueante)
-
-⚠️ Ninguna historia de usuario puede comenzar hasta completar estas tareas.
-
-- [ ] T004 [P] [Foundation] Crear TicketsApiService: frontend/src/app/tickets/services/tickets-api.service.ts
-  - Implementar métodos básicos: listTickets(page, size), createTicket(payload)
-  - Usar contratos: specs/001-tickets-dashboard/contracts/tickets-api.md
-
-- [ ] T005 [P] [Foundation] Definir modelos/DTOs: frontend/src/app/tickets/models/ticket.model.ts
-  - Campos: id, asignadoA, fechaCreacion, descripcion, prioridad, estado
-
-- [ ] T006 [P] [Foundation] Configurar routing del feature: frontend/src/app/tickets/tickets-routing.module.ts
-  - Rutas: /tickets (Dashboard container), /tickets/new (NewTicket container)
-
-- [ ] T007 [P] [Foundation] Crear módulo del feature: frontend/src/app/tickets/tickets.module.ts
-  - Declarar containers y componentes base
-
-- [ ] T008 [P] [Foundation] Añadir guard de autenticación si procede (usar guard global): frontend/src/app/tickets/guards/auth.guard.ts
-
-- [ ] T009 [P] [Foundation] Añadir utilidades de paginación y tipos: frontend/src/app/tickets/models/pagination.model.ts
-
-- [ ] T010 [P] [Foundation] Documentar contrato API y ejemplos de respuesta: specs/001-tickets-dashboard/contracts/tickets-api.md (actualizar si falta)
-
-## Phase 3: User Story US1 - Dashboard + Mostrar todos los tickets (Priority: P1)
-
-Goal: Implementar el dashboard con botones "Crear nuevo ticket" y "Mostrar todos los tickets" y la tabla paginada que lista tickets.
-
-Independent Test: Manual + e2e que verifique los botones y que la tabla lista filas (paginación funcional)
-
-### Tests (TDD-first)
-- [P] T011 [US1] Unit tests (Jest) para TicketsApiService: frontend/src/app/tickets/services/tickets-api.service.spec.ts
-- [P] T012 [US1] Unit tests para TicketTable component: frontend/src/app/tickets/components/ticket-table/ticket-table.component.spec.ts
-- [P] T013 [US1] E2E (Playwright) para flujo: tests/e2e/tickets/dashboard.spec.ts
-  - Caso: al cargar dashboard los dos botones son visibles; al pulsar "Mostrar todos los tickets" se muestra tabla con hasta 25 filas y controles de paginación
-
-### Implementation
-- [P] T014 [US1] Crear container DashboardPage: frontend/src/app/tickets/containers/dashboard/dashboard.page.ts(+html/scss)
-  - Incluir botones accesibles con ARIA: "Crear nuevo ticket" y "Mostrar todos los tickets"
-
-- [P] T015 [US1] Crear componente TicketTable: frontend/src/app/tickets/components/ticket-table/ticket-table.component.ts(+html/scss)
-  - Props: tickets[], page, pageSize, total
-  - Eventos: pageChange
-  - Columnas: Asignado a, ID, Fecha, Descripción, Prioridad, Estado
-
-- [ ] T016 [US1] Integrar TicketsApiService en DashboardPage para consultar lista paginada
-  - Archivo: frontend/src/app/tickets/containers/dashboard/dashboard.page.ts
-  - Default pageSize = 25
-
-- [ ] T017 [US1] Implementar paginación en servidor y controles Prev/Next en TicketTable
-  - Archivos: frontend/src/app/tickets/components/ticket-table/*
-
-- [ ] T018 [US1] Accesibilidad: Asegurar navegación por teclado y labels ARIA para botones y tabla
-  - Archivos: dashboard.page.html, ticket-table.component.html
-
-- [ ] T019 [US1] Logging y manejo de errores: mostrar spinner y mensajes de error en caso de fallo de carga
-  - Archivos: dashboard.page.ts, ticket-table.component.ts
-
-Checkpoint: US1 debe poder ser probado independientemente (tests unitarios y e2e)
-
-## Phase 4: User Story US2 - Crear nuevo ticket (Priority: P2)
-
-Goal: Implementar página dedicada /tickets/new con formulario para crear tickets.
-
-Independent Test: e2e que cree un ticket y verifique que la lista se actualiza (<5s)
-
-### Tests
-- [P] T020 [US2] Unit tests para TicketForm component: frontend/src/app/tickets/components/ticket-form/ticket-form.component.spec.ts
-- [P] T021 [US2] Integration test (Jest) para flow de creación llamando a TicketsApiService: frontend/src/app/tickets/containers/new-ticket/new-ticket.page.spec.ts
-- [P] T022 [US2] E2E (Playwright) para crear ticket y verificar actualización en dashboard: tests/e2e/tickets/create-ticket.spec.ts
-
-### Implementation
-- [P] T023 [US2] Crear container NewTicketPage: frontend/src/app/tickets/containers/new-ticket/new-ticket.page.ts(+html/scss)
-- [P] T024 [US2] Crear componente TicketForm: frontend/src/app/tickets/components/ticket-form/ticket-form.component.ts(+html/scss)
-  - Campos: asignado_a, descripcion, prioridad (baja/media/alta), estado (inicial)
-  - Validaciones: campos requeridos
-
-- [ ] T025 [US2] Integrar form con TicketsApiService.createTicket() y manejar redirección/feedback
-  - Al crear: navegar a /tickets y refrescar la página de listados (o emitir evento para reconsulta)
-
-- [ ] T026 [US2] Asegurar que después de crear, el dashboard reconsulte la página actual y muestre el nuevo ticket en <=5s
-  - Implementar polling ligero o usar evento/subject compartido en servicio
-
-## Phase 5: Polish & Cross-Cutting
-
-- [P] T027 [Polish] Documentación: actualizar specs/001-tickets-dashboard/quickstart.md y README del feature
-- [P] T028 [Polish] Tests adicionales unitarios para alcanzar cobertura >=80% en el módulo tickets
-- [P] T029 [Polish] Revisar estilos/responsive: frontend/src/app/tickets/**/*.scss
-- [P] T030 [Polish] Revisión de accesibilidad (A11y): ejecutar checklist en specs/001-tickets-dashboard/quickstart.md
-
-## Dependencias & Orden de ejecución
-- Phase 1 → Phase 2 (FOUNDATIONAL) es bloqueante → Phase 3 (US1) → Phase 4 (US2) → Phase 5
-- Dentro de cada historia seguir orden: tests (escribir y fallar) → modelos → servicios → components → containers → e2e
-
-## Notas
-- Las rutas y nombres de archivos son sugeridos y deben adaptarse a convenciones del repo si difieren.
-- Priorizar T014..T018 para entregable MVP (Dashboard + Listado paginado)
-- Usar specs/001-tickets-dashboard/contracts/tickets-api.md como fuente de verdad para payloads y respuestas.
+- [ ] T001 Create feature module and lazy route at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\tickets.module.ts and C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\tickets-routing.module.ts
+- [P] [ ] T002 Add/import Angular Material modules (MatTableModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatSelectModule, MatButtonModule) into C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\tickets.module.ts
+- [P] T003 Create TypeScript interfaces from data-model.md in C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\models\interfaces.ts (Ticket, User, PaginationMeta)
+- [P] T004 Add API base configuration and environment reference in C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\environments\environment.ts and ensure usage in services
+- [P] T005 Create transformers for enum label mapping and date formatting at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\utils\transformers.ts
 
 ---
 
+## Phase 2: Foundational (Blocking Prerequisites)
+
+Purpose: Implement core services and infra required by all user stories (auth, error handling, API client, state)
+
+- [ ] T006 Implement HTTP Authorization interceptor at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\core\interceptors\auth.interceptor.ts to attach Bearer token to outgoing requests (per research.md decision)
+- [ ] T007 Implement centralized error handler service at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\core\services\error-handler.service.ts and register provider in AppModule
+- [ ] T008 Implement tickets API client at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-api.service.ts (methods: listTickets(params), createTicket(payload)) following specs/001-tickets-dashboard/contracts/tickets-api.md
+- [P] T009 Implement tickets state service for caching, refresh and observables at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-state.service.ts (exposes refresh(), tickets$)
+- [ ] T010 Add Jest unit-test scaffold for tickets module and test setup at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\setup.test.ts (ensure Angular Testing Library + Jest available per plan)
+- [ ] T011 Scaffold Cypress e2e spec at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\e2e\src\tickets\dashboard.spec.ts and ensure cypress.json/config references baseUrl
+
+---
+
+## Phase 3: User Story 1 - Dashboard list + New Ticket CTA (Priority: P1) 🎯 MVP
+
+Goal: /tickets page shows paginated table (25, 50), filters for priority/status, sortable columns and a prominent "New Ticket" CTA that navigates to /tickets/new. Ensure re-query after creation surfaces new tickets in ≤5s.
+
+Independent Test: Unit tests for services and components; Cypress e2e that creates a ticket (POST) and verifies it appears in listing within 5s.
+
+### Tests for US1 (TDD)
+
+- [P] T012 [US1] Create contract test for GET /tickets at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\contract\get-tickets.spec.ts (assert meta and items schema)
+- [P] T013 [US1] Create unit tests for tickets-api.service at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\unit\tickets-api.spec.ts (params, mapping, error cases)
+
+### Implementation for US1
+
+- [ ] T014 [US1] Create TicketsListPage component at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\tickets-list-page\tickets-list-page.component.ts, .html, .scss (route /tickets)
+- [ ] T015 [US1] Implement TicketsTableComponent using MatTable/MatPaginator/MatSort at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\tickets-table\tickets-table.component.ts, .html, .scss (supports pageSize selector 25/50)
+- [P] T016 [US1] Implement TicketFiltersComponent at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\ticket-filters\ticket-filters.component.ts, .html, .scss (priority/status with 'All' option)
+- [ ] T017 [US1] Add New Ticket CTA to TicketsListPage HTML at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\tickets-list-page\tickets-list-page.component.html linking to /tickets/new
+- [ ] T018 [US1] Wire listing to tickets-state.service and tickets-api.service; default pageSize=25 at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\tickets-list-page\tickets-list-page.component.ts (depends on T008, T009)
+- [ ] T019 [US1] Implement date formatting and label mapping usage in templates via transformers in C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\utils\transformers.ts (depends on T005)
+- [ ] T020 [US1] Create integration unit test for listing UI at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\integration\listing.spec.ts (mock tickets-state.service)
+- [ ] T021 [US1] Create Cypress e2e test that POSTs a ticket and asserts it appears in the /tickets list within 5s at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\e2e\src\tickets\create-and-reflect.spec.ts (depends on T011)
+
+Checkpoint: After T012–T021 US1 should be independently testable and considered MVP if tests pass.
+
+---
+
+## Phase 4: User Story 2 - Create Ticket Form (Priority: P2)
+
+Goal: /tickets/new page with a reactive form to create tickets (title/asignado_a/descripcion/prioridad/estado) with client validation and server integration.
+
+Independent Test: Unit tests for form validation + contract test for POST /tickets + e2e create flow.
+
+### Tests for US2
+
+- [P] T022 [US2] Create contract test for POST /tickets at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\contract\post-ticket.spec.ts
+- [P] T023 [US2] Create unit tests for TicketForm validation at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\unit\create-form.spec.ts
+
+### Implementation for US2
+
+- [ ] T024 [US2] Create TicketCreatePage component at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\ticket-create-page\ticket-create-page.component.ts, .html, .scss (reactive form)
+- [ ] T025 [US2] Implement form submission to tickets-api.service.createTicket() and handle success/errors in C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\pages\ticket-create-page\ticket-create-page.component.ts (depends on T008)
+- [ ] T026 [US2] On success navigate to /tickets and trigger tickets-state.service.refresh() with light backoff until new ticket appears (<=5s) in C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\services\tickets-state.service.ts
+- [ ] T027 [US2] Add integration/e2e test for full create flow at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\e2e\src\tickets\create-flow.spec.ts (if T021 does not fully cover)
+
+Checkpoint: US2 delivers a validated create form and backend integration.
+
+---
+
+## Phase 5: User Story 3 - Sorting, Page Size & Accessibility (Priority: P3)
+
+Goal: Robust sorting by columns (id,title,priority,status,assignedTo,createdAt), page-size selector (25/50), comprehensive a11y (ARIA/keyboard) and loading/empty/error states.
+
+Independent Test: Unit + integration tests verify sort params and UI; e2e checks keyboard navigation and ARIA roles.
+
+- [ ] T028 [US3] Implement page-size selector handler (25/50) in C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\tickets-table\tickets-table.component.ts and .html
+- [P] T029 [US3] Implement column sort handlers mapping to API sort query params in C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\tickets-table\tickets-table.component.ts
+- [ ] T030 [US3] Add ARIA attributes and keyboard navigation support in tickets components under C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\ (tickets-table and filters)
+- [P] T031 [US3] Add loading skeleton, empty state and error state components under C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\components\shared\states\
+- [ ] T032 [US3] Add unit/integration tests for sorting, pagination and accessibility at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\integration\sorting-pagination-accessibility.spec.ts
+
+---
+
+## Phase N: Polish & Cross-Cutting Concerns
+
+- [P] T033 Update docs and quickstart at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\specs\001-tickets-dashboard\quickstart.md (verify scripts/commands)
+- [P] T034 Run linter/formatter and fix style issues for new files (repo root: package.json scripts)
+- [P] T035 Final accessibility audit and fixes (report changes under C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\specs\001-tickets-dashboard\)
+- [ ] T036 Run full test matrix (unit/integration/e2e), ensure coverage >=80% for new module and fix failures
+
+---
+
+## Dependencies & Execution Order
+
+- Phase 1 (T001–T005) must complete before Phase 2 (T006–T011).
+- Phase 2 (Foundational) must be completed before starting User Stories (T012+).
+- MVP priority: Complete Phase 3 (US1: T012–T021) first. Then Phase 4 (US2) and Phase 5 (US3) incrementally.
+- Within each story: Tests (write & fail) → Models/Interfaces → Services → Components/Pages → Integration/E2E.
+
+### Parallel Opportunities
+
+- Tasks explicitly marked [P] can be worked on in parallel where no file conflicts exist (for example: T003, T005, T009, T012, T013, T016, T022, T023, T029, T031, T033–T035).
+
+---
+
+## Parallel Execution Example: User Story 1
+
+Run these in parallel (separate workers):
+- T012 [US1] contract test for GET /tickets
+- T013 [US1] unit tests for tickets-api.service
+- T003 create TypeScript interfaces
+
+---
+
+## Implementation Strategy
+
+MVP First:
+1. Setup (T001–T005)
+2. Foundational (T006–T011)
+3. US1 MVP (T012–T021) → validate
+4. Proceed to US2 (T022–T027) and US3 (T028–T032)
+
+---
+
+## Generated artifact
+
+- Path: C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\specs\001-tickets-dashboard\tasks.md
+
+## Summary (task counts by phase)
+
+- Total tasks: 36
+- Phase 1 (Setup): 5
+- Phase 2 (Foundational): 6
+- Phase 3 (US1 MVP): 10
+- Phase 4 (US2): 6
+- Phase 5 (US3): 5
+- Polish & Cross-cutting: 4
