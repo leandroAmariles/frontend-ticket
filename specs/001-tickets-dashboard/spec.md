@@ -6,6 +6,12 @@ Summary
 
 Ensure the dashboard filters deploy (display and populate) the available filter values for ticket lists. Filter controls (priority, status, assignee and other configurable fields) must show the correct and current set of selectable values so users can reliably narrow results. Values should be sourced from the backend or derived from the dataset, cached reasonably for responsiveness, localized for presentation, and resilient when values are missing or very large in cardinality.
 
+## Clarifications
+
+### Session 2026-04-25
+
+- Q: What is the primary source of filter values? → A: Use dedicated backend filter-values endpoint (primary source).
+
 Actors
 
 - Agent / Authenticated user: views and manages tickets.
@@ -30,6 +36,7 @@ Functional requirements
 FR-1: Dynamic population of filter values
 
 - Filter controls must populate their option lists from a reliable source on initial page load: either a dedicated backend filter-values resource or by inspecting the current ticket page set when a dedicated endpoint is not available.
+- Filter controls must populate their option lists primarily from a dedicated backend filter-values resource (preferred). If a dedicated endpoint is not available, the frontend MAY derive values by inspecting the current ticket page set as a documented fallback; note limitations where server-side aggregation differs across pages.
 - Acceptance test: When the dashboard loads, each filter control shows options corresponding to the current available values within 500 ms of the UI becoming interactive (excluding network latency allowances for slow links; see assumptions).
 
 FR-2: Caching and refresh
