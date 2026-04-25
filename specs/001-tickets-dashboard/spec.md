@@ -16,7 +16,7 @@ Alcance
 Incluye:
 
 - Página de dashboard con una acción primaria prominente: "New Ticket".
-- Tabla paginada de tickets con columnas: id, title, priority, status, assignedTo, createdAt (mostrar etiquetas localizadas en UI).
+ - Tabla paginada de tickets con columnas: id, title, priority, status, assigned_to_id, assigned_to_name, created_at (mostrar etiquetas localizadas en UI; ver mapeo UI↔API).
 - Ordenación por columna (asc/desc) y filtros básicos para priority y status.
 - Soporte de tamaños de página hasta 50 filas (opciones: 25, 50).
 
@@ -35,7 +35,7 @@ RF-1: Acciones primarias visibles
 RF-2: Creación de ticket
 
 - El botón "New Ticket" abre un formulario para crear tickets.
-- Criterio de aceptación: El formulario permite ingresar title, assignedTo, description, priority y status inicial.
+- Criterio de aceptación: El formulario permite ingresar title, description, priority, status inicial y seleccionar un asignado. Datos emitidos al API deben usar campos canónicos: assigned_to_id (UUID v4 | null) y assigned_to_name (string | null) cuando proceda.
 - Decisión: El formulario abrirá en una página dedicada (/tickets/new). Tras creación, la lista reconsultará datos y mostrará el nuevo ticket en ≤5s.
 
 RF-3: Listado, paginación y tamaños de página
@@ -45,7 +45,7 @@ RF-3: Listado, paginación y tamaños de página
 
 RF-4: Ordenación
 
-- Las columnas id, title, priority, status, assignedTo, createdAt deben ser ordenables; la interacción es mediante clic en cabecera con indicador asc/desc.
+- Las columnas id, title, priority, status, assigned_to_name, created_at deben ser ordenables; la interacción es mediante clic en cabecera con indicador asc/desc. Para orden por asignado se usará assigned_to_name en la UI y assigned_to_id en requests si procede.
 - Criterio de aceptación: Orden ascendente/descendente funciona y los datos se actualizan en la tabla.
 
 RF-5: Filtrado básico
@@ -88,21 +88,36 @@ Criterios de éxito (medibles)
 
 Entidades clave
 
-- Ticket: {
-  - id: string (UUID or numeric identifier, canonical name: id)
+ - Ticket: {
+  - id: string (UUID v4) — identificador canónico del ticket en API
   - title: string
   - description: string
-  - priority: enum (low, medium, high) — canonical snake_case in API
-  - status: enum (open, in_progress, closed) — canonical snake_case in API
-  - assignedTo: string (display name or user id)
-  - createdAt: timestamp
+  - priority: enum (low, medium, high) — valores canónicos en snake_case
+  - status: enum (open, in_progress, closed) — valores canónicos en snake_case
+  - assigned_to_id: string | null — id del usuario asignado (UUID v4), null si no hay asignado
+  - assigned_to_name: string | null — nombre para mostrar del usuario asignado, null si no hay asignado
+  - created_at: timestamp (ISO 8601 recomendado en API)
 }
 - Usuario: id, nombre, rol
 
 API contract and UI mapping
 
-- Backend API uses snake_case enums and field names (priority: low/medium/high; status: open/in_progress/closed).
-- Decision: Keep canonical snake_case at data layer; implement a UI mapping layer that converts canonical values to localized, human-friendly labels (e.g., "low" -> "Baja"). This preserves contract stability while allowing localized display.
+ - Backend API usa nombres de campo y valores canónicos en snake_case (ej.: priority: "low"/"medium"/"high"; status: "open"/"in_progress"/"closed").
+
+Clarificación de contratos y mapeo UI↔API
+
+- Campos canónicos del Ticket (API) que el frontend debe consumir/emitir: id, title, description, priority, status, assigned_to_id, assigned_to_name, created_at.
+- Formato de id: UUID v4 (por ejemplo: "3fa85f64-5717-4562-b3fc-2c963f66afa6"). El frontend debe validar este formato en entradas y aceptar null/omisión donde el API lo permita.
+- División de assigned_to para eliminar ambigüedad:
+  - assigned_to_id: identificador del usuario asignado (UUID v4) o null
+  - assigned_to_name: nombre para mostrar del asignado o null
+
+- Mapeo UI↔API y localización:
+  - El API mantiene valores canónicos y no localizados. La UI presenta etiquetas y formatos localizados (ej.: "low" -> "Baja").
+  - Al enviar datos al API, usar siempre los nombres y valores canónicos (assigned_to_id, etc.). Al mostrar en la UI, convertir a etiquetas/localización.
+  - Documentar en el equipo dónde se realiza este mapeo y asegurar pruebas que verifiquen la correspondencia UI↔API.
+
+Esta sección resuelve la inconsistencia I1 (nombres mixtos camelCase/snake_case) y las ambigüedades A1/A2 sobre el formato de id y el significado del campo assigned_to.
 
 Restricciones y supuestos
 

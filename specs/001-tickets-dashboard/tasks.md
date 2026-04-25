@@ -112,6 +112,27 @@ Independent Test: Unit + integration tests verify sort params and UI; e2e checks
 - [P] T034 Run linter/formatter and fix style issues for new files (repo root: package.json scripts)
 - [P] T035 Final accessibility audit and fixes (report changes under C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\specs\001-tickets-dashboard\)
 - [ ] T036 Run full test matrix (unit/integration/e2e), ensure coverage >=80% for new module and fix failures
+ - [ ] T037 [P] Crear script de rendimiento k6 para GET /tickets en tests/performance/get-tickets-k6.js
+   - Criterios de aceptación:
+	 - El archivo tests/performance/get-tickets-k6.js existe y contiene un script k6 que ejecuta GET /tickets usando una URL configurable vía variable de entorno (K6_BASE_URL).
+	 - El escenario simula carga realista (ramp-up, duración y VUs) y documenta el escenario en el encabezado del archivo.
+	 - El script genera salida JSON/STDOUT con métricas y permite calcular p95 de latencia.
+	 - Se añade README corto en tests/performance/README.md con comando de ejecución ejemplo.
+   - Dependencias: Ninguna.
+
+ - [ ] T038 [P] Crear protocolo de prueba de usabilidad cuantitativa RF-1 en specs/001-tickets-dashboard/usability/rf-1-study.md
+   - Criterios de aceptación:
+	 - El archivo specs/001-tickets-dashboard/usability/rf-1-study.md contiene objetivo, guion paso a paso, instrucciones de moderador y definición exacta de la métrica temporal a medir.
+	 - Tamaño mínimo de muestra: 15 participantes y criterios de reclutamiento.
+	 - Definición de éxito: ≥95% de participantes completan la tarea objetivo en ≤10s; incluye método de análisis y template de recogida de datos.
+   - Dependencias: Acceso a una versión desplegada o entorno de test representativo para ejecución.
+
+ - [ ] T039 Crear workflow de CI en .github/workflows/ci-perf-coverage.yml para validar coverage global >=80% y ejecutar scripts de performance
+   - Criterios de aceptación:
+	 - Existe .github/workflows/ci-perf-coverage.yml que instala dependencias, ejecuta tests, genera informe de coverage y falla si coverage global <80%.
+	 - El workflow ejecuta los scripts de tests/performance (k6) contra K6_BASE_URL configurable y guarda resultados como artefactos.
+	 - El workflow publica artefactos (coverage, k6 results) y documenta variables/secretos necesarios.
+   - Dependencias: T037 y suite de tests/coverage configurada.
 
 ---
 

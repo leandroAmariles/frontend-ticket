@@ -37,69 +37,56 @@ No constitution gates are violated by the chosen approach. All mandatory rules a
 
 ## Project Structure
 
-### Documentation (this feature)
+### Documentación (esta feature)
 
 ```text
-specs/[###-feature]/
-├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output (/speckit.plan command)
-├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
-└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+specs/001-tickets-dashboard/
+├── plan.md
+├── research.md
+├── data-model.md
+├── quickstart.md
+├── contracts/
+└── tasks.md
 ```
 
-### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+### Código fuente (raíz del repo)
+
+Implementaremos el módulo feature lazy-loaded en `src/app/tickets`.
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
 frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+└── src/
+    ├── app/
+    │   ├── tickets/                     # Módulo feature tickets (lazy-loaded)
+    │   │   ├── tickets.module.ts        # Declaraciones, rutas de feature
+    │   │   ├── components/
+    │   │   │   ├── tickets-table/       # TicketsTableComponent
+    │   │   │   ├── ticket-row/          # TicketRowComponent
+    │   │   │   └── ticket-filters/      # TicketFiltersComponent
+    │   │   ├── pages/
+    │   │   │   ├── tickets-list-page/   # TicketsListPage (ruta: /tickets)
+    │   │   │   └── ticket-create-page/  # TicketCreatePage (ruta: /tickets/new)
+    │   │   ├── services/
+    │   │   │   ├── tickets-api.service.ts
+    │   │   │   └── tickets-state.service.ts
+    │   │   └── models/
+    │   │       └── index.ts             # Interfaces: Ticket, User, PaginationMeta
+    │   └── ... (otros módulos de la app)
+    ├── assets/
+    └── styles/
 ```
 
- **Structure Decision**: Option 2 (Web application). Use the existing frontend project structure. Implement a feature module at `src/app/tickets` with:
- - components/: TicketsTableComponent, TicketRowComponent, TicketFiltersComponent, TicketPageComponent
- - pages/: TicketsListPage (/tickets), TicketCreatePage (/tickets/new)
- - services/: tickets-api.service.ts (HttpClient), tickets-state.service.ts (optional local caching)
- - models/: interfaces.ts (Ticket, User, PaginationMeta)
+Pruebas:
 
- Place tests under `src/app/tickets/__tests__` (unit) and e2e specs in `e2e/` or `tests/e2e` depending on repo conventions.
+```text
+# Unit tests (feature)
+src/app/tickets/__tests__/*.spec.ts
+
+# E2E tests
+e2e/tickets/*.cy.ts   # o tests/e2e/tickets/ según convención del repo
+```
+
+Decisión breve: se elige la opción "Aplicación web" porque el repositorio ya contiene el frontend Angular; implementar un módulo feature en `src/app/tickets` permite lazy-loading, separación clara de responsabilidades y fácil integración con Angular Material y las pruebas (unitarias y e2e). Rutas principales: `/tickets` (listado) y `/tickets/new` (creación). Paths clave: `src/app/tickets/`, `src/app/tickets/components/`, `src/app/tickets/pages/`, `src/app/tickets/services/`, `src/app/tickets/models/`, `src/app/tickets/tickets.module.ts`.
 
 ## Complexity Tracking
 
