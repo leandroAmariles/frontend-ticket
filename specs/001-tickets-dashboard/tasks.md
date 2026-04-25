@@ -42,6 +42,36 @@ Purpose: Implement core services and infra required by all user stories (auth, e
 - [ ] T010 Add Jest unit-test scaffold for tickets module and test setup at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\src\app\tickets\__tests__\setup.test.ts (ensure Angular Testing Library + Jest available per plan)
 - [ ] T011 Scaffold Cypress e2e spec at C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\e2e\src\tickets\dashboard.spec.ts and ensure cypress.json/config references baseUrl
 
+ - [ ] T050 [BLOCKING] Configure ESLint & Prettier and repo formatting rules
+   - Descripción: Añadir/validar configuración de ESLint y Prettier en la raíz del repo (eslintrc, prettier config), añadir scripts npm (`lint`, `format`) y documentar en README. Ejecutar `npm run lint` en CI.
+   - Output: .eslintrc.(js|json), .prettierrc, package.json scripts actualizados, PR con cambios.
+
+ - [ ] T051 [BLOCKING] Add Husky + commitlint + lint-staged pre-commit hooks
+   - Descripción: Configurar Husky para ganchos pre-commit que ejecuten `lint-staged` y `npm run test:fast` (o tests unitarios rápidos). Añadir commitlint con convenciones Conventional Commits. Documentar en CONTRIBUTING.md.
+   - Output: configuración Husky, commitlint config, lint-staged entries en package.json.
+
+ - [ ] T052 [BLOCKING] Add CI job to validate lint/format/tests (.github/workflows/ci-lint.yml)
+   - Descripción: Añadir workflow que instala dependencias, ejecuta `npm run lint`, `npm run format:check` y tests rápidos; falla si el lint o format-check fallan.
+   - Dependencias: T050, T051
+
+ - [ ] T053 Integrate basic observability (Sentry or optional provider)
+   - Descripción: Añadir integración opcional con Sentry (o proveedor acordado) en el frontend AppModule y habilitar env var configuration; documentar desactivación para entornos locales. Añadir tarea de prueba que verifique captura básica de errores en staging.
+   - Output: configuración mínima de Sentry en `src/app/core/services/observability.service.ts` y documentación.
+
+- [ ] T040 Reconcile and publish canonical API contract (BLOCKING)
+  - Descripción: Coordinar con backend para acordar y publicar el contrato canónico (snake_case): `assigned_to_id`, `assigned_to_name`, `created_at`, `priority`, `status`, y parámetros de query para `priority`, `status` y `sort`. Actualizar `specs/001-tickets-dashboard/contracts/tickets-api.md` y `data-model.md` como artefacto de acuerdo.
+  - Output: Contrato actualizado en `contracts/tickets-api.md` + PR. (Prioridad: alta, bloqueo para implementación frontend.)
+
+- [ ] T041 Implement transformers and tests for API ↔ UI mapping
+  - Descripción: Crear `tickets-transformers` en `src/app/tickets/utils/transformers.ts` que exponga:
+	- `mapApiTicketToUi(apiTicket): Ticket`
+	- `mapCreateFormToApi(payload): ApiCreateTicketPayload`
+  - Añadir tests unitarios que validen transformaciones, manejo de nulls y validación de UUID v4.
+
+- [ ] T042 Add contract tests for GET /tickets query params (filters & sort)
+  - Descripción: Extender/añadir tests en `src/app/tickets/__tests__/contract/get-tickets.spec.ts` para afirmar que el backend acepta y aplica `priority`, `status` y `sort` query params. Incluir ejemplos y casos edge (invalid params => 400).
+
+
 ---
 
 ## Phase 3: User Story 1 - Dashboard list + New Ticket CTA (Priority: P1) 🎯 MVP
@@ -127,12 +157,21 @@ Independent Test: Unit + integration tests verify sort params and UI; e2e checks
 	 - Definición de éxito: ≥95% de participantes completan la tarea objetivo en ≤10s; incluye método de análisis y template de recogida de datos.
    - Dependencias: Acceso a una versión desplegada o entorno de test representativo para ejecución.
 
+  - [P] T054 [P] Add visual-regression tests for table rendering (50 rows) and breakpoints
+    - Descripción: Integrar una solución de visual regression (Percy/Chromatic o Cypress+compare snapshots) que capture screenshots del listado con 25 y 50 filas en breakpoints desktop/tablet/mobile, incluyendo casos de títulos largos y sin assigned. Añadir job opcional en CI que publique resultados y falle en diffs mayores al umbral configurado.
+    - Criterios de aceptación: Baselines creadas, pipeline local para generar screenshots, y job CI que puede ejecutarse manualmente; documentación en `specs/001-tickets-dashboard/tests/visual/README.md`.
+
  - [ ] T039 Crear workflow de CI en .github/workflows/ci-perf-coverage.yml para validar coverage global >=80% y ejecutar scripts de performance
    - Criterios de aceptación:
 	 - Existe .github/workflows/ci-perf-coverage.yml que instala dependencias, ejecuta tests, genera informe de coverage y falla si coverage global <80%.
 	 - El workflow ejecuta los scripts de tests/performance (k6) contra K6_BASE_URL configurable y guarda resultados como artefactos.
 	 - El workflow publica artefactos (coverage, k6 results) y documenta variables/secretos necesarios.
    - Dependencias: T037 y suite de tests/coverage configurada.
+
+	- [ ] T043 Integrar umbral de performance p95 en CI
+	  - Descripción: Añadir paso en `.github/workflows/ci-perf-coverage.yml` o crear job dedicado que ejecute `tests/performance/get-tickets-k6.js` y falle si p95 de latencia de la petición GET /tickets > 200ms (configurable vía variable de entorno). Guardar resultados como artefacto JSON.
+	  - Criterios de aceptación: CI falla cuando p95 > 200ms; existe documentación de la variable K6_BASE_URL y del umbral; job ejecuta en entorno de pruebas contra endpoint accesible.
+	  - Dependencias: T037, T039
 
 ---
 

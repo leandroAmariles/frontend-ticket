@@ -36,7 +36,7 @@ RF-2: Creación de ticket
 
 - El botón "New Ticket" abre un formulario para crear tickets.
 - Criterio de aceptación: El formulario permite ingresar title, description, priority, status inicial y seleccionar un asignado. Datos emitidos al API deben usar campos canónicos: assigned_to_id (UUID v4 | null) y assigned_to_name (string | null) cuando proceda.
-- Decisión: El formulario abrirá en una página dedicada (/tickets/new). Tras creación, la lista reconsultará datos y mostrará el nuevo ticket en ≤5s.
+- Decisión: El formulario abrirá en una página dedicada (/tickets/new). Tras creación, la lista reconsultará datos y mostrará el nuevo ticket en ≤5s (por reconsulta o evento push). El comportamiento de reconsulta deberá documentarse en la implementación (intervalos, backoff ligero y cancelación si procede).
 
 RF-3: Listado, paginación y tamaños de página
 
@@ -48,14 +48,17 @@ RF-4: Ordenación
 - Las columnas id, title, priority, status, assigned_to_name, created_at deben ser ordenables; la interacción es mediante clic en cabecera con indicador asc/desc. Para orden por asignado se usará assigned_to_name en la UI y assigned_to_id en requests si procede.
 - Criterio de aceptación: Orden ascendente/descendente funciona y los datos se actualizan en la tabla.
 
+Aclaración sobre ordenación por asignado:
+- Comportamiento acordado: La UI muestra y permite ordenar por el nombre del asignado (`assigned_to_name`). El API idealmente soportará la misma operación mediante `sort=assigned_to_name:<asc|desc>`.
+- Si el backend no soporta sorting por `assigned_to_name`, el contrato debe indicar la limitación y la UI realizará el ordenamiento del conjunto de resultados recibido (nota: esto puede aplicarse tras la paginación y requiere documentar la limitación de consistencia entre páginas).
+- Para evitar ambigüedades de collation/locale, documentar la collation usada por el backend (ej.: `locale: es-ES`) o acordar que el frontend aplique sort locale-aware cuando realice el ordenamiento.
+
 RF-5: Filtrado básico
 
 - Controles para filtrar por priority (low/medium/high) y status (open/in_progress/closed). Filtros ofrecen opción "All" para quitar filtro.
 - Criterio de aceptación: Aplicar filtro reduce el conjunto visible y se mantiene la paginación coherente.
 
-RF-6: Actualización tras creación
-
-- Nuevo ticket aparece en la lista en ≤5s tras la confirmación de creación (por reconsulta o evento push).
+<!-- RF-6 consolidado en RF-2: Nuevo ticket aparece en la lista en ≤5s -->
 
 Escenarios de usuario (Acceptance Scenarios)
 
