@@ -1,106 +1,140 @@
-# Especificación: Panel de Tickets
+# Especificación: Tickets Dashboard
 
 Nombre corto: tickets-dashboard
 
 Resumen
 
-Crear un panel (dashboard) en la aplicación frontend con dos botones principales: uno para crear un nuevo ticket y otro para mostrar la lista completa de tickets en la página. La lista de tickets se presenta en columnas con: nombre de la persona asignada, id del ticket, fecha, descripción, prioridad y estado.
+Crear una página de dashboard en el frontend que liste tickets de soporte en una tabla con paginación y filtros básicos. La tabla debe mostrar hasta 50 filas correctamente sin desbordes de diseño, permitir ordenación por columnas y filtrado por prioridad y estado. Debe existir un botón claro y prominente "New Ticket" que abra el formulario de creación; los tickets nuevos deben aparecer en el listado en menos de 5 segundos.
 
 Actores
 
-- Usuario autenticado (empleado/agente) que crea o consulta tickets.
-- Usuario (lector) que solo necesita ver la lista de tickets.
-- Permiso de creación: cualquier usuario autenticado puede crear tickets.
+- Agente / Usuario autenticado: crea y gestiona (ver) tickets.
+- Lector: usuario que solo consulta la lista de tickets.
 
 Alcance
 
 Incluye:
-- Interfaz de dashboard con dos botones claramente etiquetados: "Crear nuevo ticket" y "Mostrar todos los tickets".
-- Vista de lista de tickets en formato tabular con las columnas: Asignado a, ID, Fecha, Descripción, Prioridad, Estado.
-- Flujo para crear un ticket que lleve al usuario a un formulario o modal (verclarificación 1).
+
+- Página de dashboard con una acción primaria prominente: "New Ticket".
+- Tabla paginada de tickets con columnas: id, title, priority, status, assignedTo, createdAt (mostrar etiquetas localizadas en UI).
+- Ordenación por columna (asc/desc) y filtros básicos para priority y status.
+- Soporte de tamaños de página hasta 50 filas (opciones: 25, 50).
 
 Excluye:
-- Edición avanzada de tickets, asignación automática, notificaciones por correo, y filtros/paginación complejos (a menos que se solicite).
+
+- Edición avanzada de tickets desde la tabla (solo lectura en lista; edición vía formulario detallado fuera de alcance).
+- Búsqueda libre o filtros complejos (por ahora solo priority/status).
 
 Requisitos funcionales
 
-RF-1: El dashboard debe mostrar dos botones visibles y accesibles: "Crear nuevo ticket" y "Mostrar todos los tickets".
-- Criterio de aceptación: Ambos botones son visibles en la carga inicial del dashboard en pantalla de escritorio y móvil.
+RF-1: Acciones primarias visibles
 
-RF-2: Al activar "Crear nuevo ticket" el sistema debe abrir un formulario para crear un ticket.
-- Criterio de aceptación: El formulario permite ingresar: nombre de la persona asignada, descripción, prioridad, y estado inicial.
-- Decisión: El formulario se abrirá en una página dedicada (/tickets/new).  
-- Comportamiento post-creación: Después de crear un ticket, la vista de listados reconsultará automáticamente al servidor para obtener la página actual de tickets y reflejar el nuevo registro (nuevo ticket aparece en la lista en <=5s).
-- Decisión de permisos: Cualquier usuario autenticado puede crear tickets.
+- El dashboard debe mostrar de forma prominente el botón "New Ticket" y controles de filtrado/ordenación accesibles.
+- Criterio de aceptación: 95% de los usuarios de prueba localizan las acciones primarias (New Ticket, filtros, orden) en ≤10s.
 
-RF-3: Al activar "Mostrar todos los tickets" el sistema debe renderizar una tabla en la misma página que lista todos los tickets disponibles.
-- Criterio de aceptación: La tabla muestra las columnas: Asignado a, ID, Fecha, Descripción, Prioridad, Estado.
-- Decisión: La tabla usará paginación en servidor. Tamaño de página por defecto: 25; controles de paginación (Anterior/Siguiente) y soporte para solicitar páginas específicas.
+RF-2: Creación de ticket
 
-RF-4: Los campos mostrados para cada ticket deben corresponder a los datos reales del ticket (ID único, fecha de creación, texto descriptivo, prioridad categorizada, estado).
-- Criterio de aceptación: Al menos 5 tickets con datos distintos se muestran correctamente en las columnas solicitadas.
+- El botón "New Ticket" abre un formulario para crear tickets.
+- Criterio de aceptación: El formulario permite ingresar title, assignedTo, description, priority y status inicial.
+- Decisión: El formulario abrirá en una página dedicada (/tickets/new). Tras creación, la lista reconsultará datos y mostrará el nuevo ticket en ≤5s.
+
+RF-3: Listado, paginación y tamaños de página
+
+- La lista se muestra como tabla paginada en servidor. Tamaño por defecto 25; selector de tamaño con opciones 25 y 50.
+- Criterio de aceptación: La tabla renderiza correctamente 50 filas cuando se selecciona ese tamaño de página sin overflow o degradación UX.
+
+RF-4: Ordenación
+
+- Las columnas id, title, priority, status, assignedTo, createdAt deben ser ordenables; la interacción es mediante clic en cabecera con indicador asc/desc.
+- Criterio de aceptación: Orden ascendente/descendente funciona y los datos se actualizan en la tabla.
+
+RF-5: Filtrado básico
+
+- Controles para filtrar por priority (low/medium/high) y status (open/in_progress/closed). Filtros ofrecen opción "All" para quitar filtro.
+- Criterio de aceptación: Aplicar filtro reduce el conjunto visible y se mantiene la paginación coherente.
+
+RF-6: Actualización tras creación
+
+- Nuevo ticket aparece en la lista en ≤5s tras la confirmación de creación (por reconsulta o evento push).
 
 Escenarios de usuario (Acceptance Scenarios)
 
-Escenario 1: Crear un nuevo ticket
-- Dado un usuario autenticado en el dashboard
-- Cuando pulsa "Crear nuevo ticket"
-- Entonces se presenta un formulario en una página dedicada donde completa los campos y confirma
-- Y la lista de tickets se reconsulta automáticamente desde el servidor y el ticket recién creado aparece en la lista en menos de 5 segundos
+Escenario 1: Crear y ver nuevo ticket
 
-Escenario 2: Mostrar todos los tickets
-- Dado un usuario en el dashboard
-- Cuando pulsa "Mostrar todos los tickets"
-- Entonces la página muestra una tabla con filas por cada ticket y columnas: Asignado a, ID, Fecha, Descripción, Prioridad, Estado
+- Dado un agente autenticado en el dashboard
+- Cuando pulsa "New Ticket" y completa el formulario
+- Entonces el sistema crea el ticket y la lista refleja el nuevo registro en ≤5s
+
+Escenario 2: Ver y navegar páginas
+
+- Dado una lista grande de tickets
+- Cuando el usuario cambia a tamaño de página 50 o navega a la página siguiente
+- Entonces la tabla muestra las filas correctas sin errores de layout y los controles de paginación funcionan
+
+Escenario 3: Ordenar y filtrar
+
+- Dado la tabla de tickets
+- Cuando el usuario aplica filtro por priority=status y ordena por createdAt
+- Entonces la lista muestra solo los tickets filtrados en el orden solicitado y mantiene la paginación
 
 Criterios de éxito (medibles)
 
-- 95% de los usuarios puede localizar y usar ambos botones en menos de 10 segundos desde la carga del dashboard (medible con tests de usabilidad).
-- La tabla muestra correctamente hasta 50 tickets sin provocar fallo de renderizado en la vista principal.
-- Al crear un ticket, el nuevo registro aparece en la lista en menos de 5 segundos después de la confirmación.
-- Usuarios informan satisfacción de navegación ≥ 4/5 en pruebas de usabilidad básicas para las tareas de crear y ver tickets.
+1. Localización de acciones: 95% de participantes localizan New Ticket y controles (filtros/orden) en ≤10s.
+2. Renderizado masivo: La UI puede renderizar 50 filas en la tabla sin overflow ni degradación perceptible del UX (ver pruebas visuales y manuales).
+3. Propagación rápida: Tickets creados aparecen en la lista en ≤5s.
+4. Responsividad: UI usable en breakpoints comunes (mobile, tablet, desktop) sin pérdida de funcionalidad.
+5. Rendimiento API (non-functional): p95 de peticiones relacionadas con listado de tickets < 200 ms (requiere pruebas de rendimiento y puede ajustarse en planificación).
+6. Accesibilidad: Cumplir con estándares a11y básicos (navegación por teclado, roles ARIA en controles, contraste suficiente).
 
 Entidades clave
 
-- Ticket: id, asignado_a (nombre), fecha_creacion, descripcion, prioridad (baja/media/alta), estado (abierto/en progreso/cerrado)
+- Ticket: {
+  - id: string (UUID or numeric identifier, canonical name: id)
+  - title: string
+  - description: string
+  - priority: enum (low, medium, high) — canonical snake_case in API
+  - status: enum (open, in_progress, closed) — canonical snake_case in API
+  - assignedTo: string (display name or user id)
+  - createdAt: timestamp
+}
 - Usuario: id, nombre, rol
+
+API contract and UI mapping
+
+- Backend API uses snake_case enums and field names (priority: low/medium/high; status: open/in_progress/closed).
+- Decision: Keep canonical snake_case at data layer; implement a UI mapping layer that converts canonical values to localized, human-friendly labels (e.g., "low" -> "Baja"). This preserves contract stability while allowing localized display.
 
 Restricciones y supuestos
 
-- Se asume que la autenticación y las APIs de backend para crear y recuperar tickets ya existen o serán provistas.
-- La prioridad se limita a las categorías baja/media/alta por defecto.
-- La interfaz debe ser responsive para pantallas de escritorio y móviles.
+- Se asume que las APIs para listado (paginado), creación y ordenación existen y respetan el contrato snake_case.
+- Se aplican normas del proyecto: TDD, cobertura mínima en tests, cobertura de pruebas automatizadas en CI.
+- Se prioriza accesibilidad y rendimiento en la implementación.
 
 Dependencias
 
-- Servicio backend que suministre lista de tickets y permita crear tickets.
-- Estilos globales y componentes UI compartidos del proyecto.
+- Endpoint backend: GET /tickets (paginated, sort, filter), POST /tickets (create).
+- Componentes UI compartidos, estilos y utilidades de i18n del proyecto.
 
 Pruebas y criterios de verificación
 
-- Prueba manual: Crear 5 tickets, pulsar "Mostrar todos los tickets" y verificar que las 5 filas aparecen con datos correctos.
-- Prueba de rendimiento básica: Cargar 50 tickets y verificar que la tabla renderiza sin errores visuales.
+- Tests de aceptación manual: crear ticket, verificar aparición en ≤5s; navegar paginación y verificar 50 filas.
+- Pruebas de usabilidad: medir tiempo de localización de acciones (target ≤10s, 95% users).
+- Pruebas de rendimiento: medir p95 de list API y UI render con 50 filas.
+- Pruebas de accesibilidad: keyboard navigation, ARIA labels, contrast checks.
 
-Documentación adicional
+Casos límite identificados
 
-- Incluir notas de accesibilidad: ambos botones deben ser navegables por teclado y tener labels ARIA adecuados.
+- Tickets con campos faltantes (sin assignedTo): mostrar "Unassigned"/localizado en UI.
+- Tickets con títulos muy largos: truncar visualmente con tooltip para texto completo.
+- Paginación en la última página con menos filas: controles deshabilitados adecuadamente.
 
 Asunciones realizadas
 
-- El formulario de creación requiere los campos mínimos: asignado_a, descripcion, prioridad, estado inicial.
-- Se implementará paginación en servidor para la lista de tickets (no se cargan todos en memoria).  
-- No se implementan filtros o búsqueda avanzados a menos que se confirme lo contrario.
+- Localización: UI puede mostrar etiquetas en español; los valores internos permanecen snake_case.
+- Tamaño máximo relevante para UX: probar hasta 50 filas por página.
 
 Estado: READY FOR PLANNING
 
-## Clarifications
-
-### Session 2026-04-24
-- Q: ¿El formulario debe abrirse como modal o navegar a una página distinta? → A: Navegar a una página dedicada (/tickets/new).
-- Q: ¿La tabla debe soportar paginación o mostrar todos los tickets en una sola vista? → A: Paginación en servidor (consultas paginadas, controles de página; tamaño por defecto 25).
-- Q: ¿Cómo debe actualizarse la lista tras crear un ticket? → A: Reconsultar automáticamente desde el servidor (refresh de página/datos; aparecer < =5s).
-- Q: ¿Quién puede crear tickets? → A: Cualquier usuario autenticado puede crear tickets.
-
 ---
 
-Archivo creado automáticamente por /speckit.specify
+Archivo actualizado por /speckit.specify
