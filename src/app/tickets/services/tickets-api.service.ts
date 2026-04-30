@@ -10,18 +10,71 @@ import {
   CreateTicketPayload,
 } from '../models';
 import { ErrorHandlerService } from '../../core/services/error-handler.service';
+import { validateTicketsArray, formatValidationErrors } from '../utils/ticket-validators';
 
 /**
  * Tickets API Service
  * Handles all HTTP communication with the backend tickets API
  *
- * Endpoint: GET /api/v1/tickets/all
+ * **Purpose**: This service is the single point of contact for all ticket-related API calls.
+ * It encapsulates HTTP requests, response validation, error handling, and transformation logic.
  *
- * Responsibilities:
+ * **Main Endpoint**:
+ * - GET `http://localhost:8080/api/v1/tickets/all`
+ *   - Query params: `page` (default: 0), `size` (default: 20)
+ *   - Response: `{items: Ticket[], page, size, total, totalPages}`
+ *
+ * **Key Responsibilities**:
  * - Fetch tickets from backend API with pagination support
- * - Transform and validate API responses
- * - Handle errors and provide user-friendly messages
- * - Support query parameters (page, size)
+ * - Validate response structure (items array, pagination metadata)
+ * - Validate individual tickets (required fields, correct types)
+ * - Transform raw API responses to business models (Ticket interface)
+ * - Handle all HTTP error statuses (4xx, 5xx, network errors)
+ * - Provide user-friendly error messages (avoid technical jargon)
+ * - Log errors with context for debugging (timestamp, status, endpoint)
+ * - Support optional parameters (page, size)
+ *
+ * **Dependencies**:
+ * - HttpClient: Make HTTP requests
+ * - ErrorHandlerService: Log errors with context
+ * - RxJS operators: Transform observables, handle errors
+ *
+ * **Example Usage**:
+ * ```typescript
+ * // In a component:
+ * constructor(private ticketsApi: TicketsApiService) {}
+ *
+ * ngOnInit() {
+ *   // Fetch first page
+ *   this.ticketsApi.getTickets(0, 20).subscribe(
+ *     (response) => {
+ *       console.log('Tickets:', response.items);
+ *       console.log('Total:', response.total);
+ *     },
+ *     (error) => {
+ *       console.error('Failed to load tickets:', error.message);
+ *     }
+ *   );
+ * }
+ * ```
+ *
+ * **Error Handling Strategy**:
+ * - 401 Unauthorized: Token expired (handled by interceptor)
+ * - 403 Forbidden: User lacks permission
+ * - 400 Bad Request: Invalid query parameters
+ * - 5xx Server Error: Temporary API issue
+ * - Network Error: Connection failure or timeout
+ * - Invalid Response: Response doesn't match expected structure
+ *
+ * **Response Validation**:
+ * Two-tier validation ensures data integrity:
+ * 1. Structure validation: Check for required fields (items, page, size)
+ * 2. Item validation: Check each ticket for required fields (id, titulo, status, etc.)
+ * Failures throw descriptive errors that are caught and displayed to user.
+ *
+ * @service Provided in 'root' to ensure singleton instance
+ * @see ErrorHandlerService for centralized error logging
+ * @see ticket-validators.ts for validation logic
  */
 @Injectable({
   providedIn: 'root',
@@ -87,9 +140,10 @@ export class TicketsApiService {
    *
    * @param response - Raw HTTP response from API
    * @returns Validated TicketsResponse
+   * @throws Error if validation fails
    */
   private validateAndTransformResponse(response: any): TicketsResponse {
-    // Validate required fields
+    // Validate response structure
     if (!response.items || !Array.isArray(response.items)) {
       throw new Error('Invalid API response: missing or invalid "items" field');
     }
@@ -98,10 +152,12 @@ export class TicketsApiService {
       throw new Error('Invalid API response: missing pagination metadata');
     }
 
-    // Validate each ticket has required fields
-    response.items.forEach((ticket: any, index: number) => {
-      this.validateTicket(ticket, index);
-    });
+    // Validate each ticket using validator utility
+    const validationResult = validateTicketsArray(response.items);
+    if (!validationResult.valid) {
+      const errorMessage = formatValidationErrors(validationResult.errors);
+      throw new Error(`Invalid ticket data in response: ${errorMessage}`);
+    }
 
     return {
       items: response.items,
@@ -112,30 +168,6 @@ export class TicketsApiService {
     };
   }
 
-  /**
-   * Validate that a ticket object has required fields
-   *
-   * @param ticket - Ticket object to validate
-   * @param index - Index for error reporting
-   * @throws Error if required fields are missing
-   */
-  private validateTicket(ticket: any, index: number): void {
-    const requiredFields = ['id', 'titulo', 'descripcion', 'status', 'createdAt', 'updatedAt'];
-    const missingFields = requiredFields.filter(field => !(field in ticket));
-
-    if (missingFields.length > 0) {
-      throw new Error(
-        `Invalid ticket at index ${index}: missing fields [${missingFields.join(', ')}]`
-      );
-    }
-
-    // Validate status values
-    if (!['PENDING', 'CREATED'].includes(ticket.status)) {
-      throw new Error(
-        `Invalid ticket at index ${index}: invalid status value "${ticket.status}". Expected PENDING or CREATED.`
-      );
-    }
-  }
 
   /**
    * Handle API errors and provide user-friendly messages

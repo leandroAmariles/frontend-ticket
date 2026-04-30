@@ -1,4 +1,4 @@
-<div class="tickets-list-page">
+<div class="tickets-list-page" role="main" aria-label="Tickets dashboard">
   <!-- Header with title and CTA -->
   <div class="page-header">
     <h1>Support Tickets</h1>
@@ -8,27 +8,40 @@
       (click)="navigateToCreate()"
       data-testid="btn-new-ticket"
       class="btn-new-ticket"
+      aria-label="Create a new support ticket"
+      title="Create a new support ticket"
     >
       + New Ticket
     </button>
   </div>
 
   <!-- Error state with retry button -->
-  <div *ngIf="error$ | async as error" class="error-section" role="alert" aria-live="polite">
+  <div *ngIf="error$ | async as error" class="error-section" role="alert" aria-live="polite" aria-atomic="true">
     <mat-card class="error-message">
       <mat-card-content>
+        <mat-icon class="error-icon" aria-hidden="true">error_outline</mat-icon>
         <p class="error-text">{{ error }}</p>
-        <button mat-raised-button color="accent" (click)="onRetry()" data-testid="btn-retry">
-          Retry
+        <button
+          mat-raised-button
+          color="accent"
+          (click)="onRetry()"
+          data-testid="btn-retry"
+          aria-label="Retry loading tickets"
+          title="Retry loading tickets"
+        >
+          ⟳ Retry
         </button>
       </mat-card-content>
     </mat-card>
   </div>
 
   <!-- Loading state -->
-  <div *ngIf="loading$ | async" class="loading-state">
-    <mat-spinner diameter="50" aria-label="Loading tickets..."></mat-spinner>
-    <p>Loading tickets...</p>
+  <div *ngIf="loading$ | async" class="loading-state" role="status" aria-live="polite">
+    <mat-spinner
+      diameter="50"
+      aria-label="Loading tickets, please wait..."
+    ></mat-spinner>
+    <p class="loading-text">Loading tickets...</p>
   </div>
 
   <!-- Tickets table (shown only when not loading and no error) -->
