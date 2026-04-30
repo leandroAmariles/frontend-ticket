@@ -39,27 +39,27 @@
 
 ### Project Structure & Configuration
 
-- [ ] T001 Create project structure and update `app.module.ts` to include HTTP interceptor providers
+- [x] T001 Create project structure and update `app.module.ts` to include HTTP interceptor providers
 
-- [ ] T002 Create `src/app/core/models/` directory and add barrel export file `src/app/core/models/index.ts`
+- [x] T002 Create `src/app/core/models/` directory and add barrel export file `src/app/core/models/index.ts`
 
-- [ ] T003 Create `src/app/tickets/models/` directory and add barrel export file `src/app/tickets/models/index.ts` 
+- [x] T003 Create `src/app/tickets/models/` directory and add barrel export file `src/app/tickets/models/index.ts` 
 
-- [ ] T004 Update `package.json` with any missing dependencies (if needed) and verify all are installed
+- [x] T004 Update `package.json` with any missing dependencies (if needed) and verify all are installed
 
 ### Core Models & Interfaces
 
-- [ ] T005 [P] Create `src/app/core/models/auth-token.model.ts` with `AuthToken` interface (accessToken, tokenType, expiresIn, username, issuedAt)
+- [x] T005 [P] Create `src/app/core/models/auth-token.model.ts` with `AuthToken` interface (accessToken, tokenType, expiresIn, username, issuedAt)
 
-- [ ] T006 [P] Create `src/app/core/models/login-request.model.ts` with `LoginRequest` interface (username, password)
+- [x] T006 [P] Create `src/app/core/models/login-request.model.ts` with `LoginRequest` interface (username, password)
 
-- [ ] T007 [P] Create `src/app/core/models/login-response.model.ts` with `LoginResponse` interface matching backend response structure
+- [x] T007 [P] Create `src/app/core/models/login-response.model.ts` with `LoginResponse` interface matching backend response structure
 
-- [ ] T008 [P] Create `src/app/tickets/models/ticket.model.ts` with `Ticket` interface mapped to actual backend fields (id, titulo, descripcion, status, creatorId, fecha, createdAt, updatedAt)
+- [x] T008 [P] Create `src/app/tickets/models/ticket.model.ts` with `Ticket` interface mapped to actual backend fields (id, titulo, descripcion, status, creatorId, fecha, createdAt, updatedAt)
 
-- [ ] T009 [P] Create `src/app/tickets/models/tickets-response.model.ts` with `TicketsResponse` interface (items, page, size, total, totalPages)
+- [x] T009 [P] Create `src/app/tickets/models/tickets-response.model.ts` with `TicketsResponse` interface (items, page, size, total, totalPages)
 
-- [ ] T010 Update all model barrel exports (`src/app/core/models/index.ts`, `src/app/tickets/models/index.ts`) to include new interfaces
+- [x] T010 Update all model barrel exports (`src/app/core/models/index.ts`, `src/app/tickets/models/index.ts`) to include new interfaces
 
 ---
 
@@ -67,7 +67,7 @@
 
 ### Authentication Service
 
-- [ ] T011 [US1] Create `src/app/core/services/auth.service.ts` with:
+- [x] T011 [US1] Create `src/app/core/services/auth.service.ts` with:
   - `login(username: string, password: string): Observable<AuthToken>` method
   - `logout(): void` method
   - `getToken(): string | null` method
@@ -84,7 +84,7 @@
 
 ### Authentication Integration into App Module
 
-- [ ] T013 [US1] Update `src/app/app.module.ts` to provide `AuthService` as singleton in core module
+- [x] T013 [US1] Update `src/app/app.module.ts` to provide `AuthService` as singleton in core module
 
 - [ ] T014 [US1] Verify TicketsModule (lazy-loaded) can be imported without circular dependency issues
 
@@ -110,7 +110,7 @@
 
 ### Authentication Interceptor
 
-- [ ] T016 [US2] Create `src/app/core/interceptors/auth.interceptor.ts` with:
+- [x] T016 [US2] Create `src/app/core/interceptors/auth.interceptor.ts` with:
   - Intercept outgoing requests
   - Inject `Authorization: Bearer <token>` header automatically
   - Extract token from `AuthService`
@@ -128,7 +128,7 @@
 
 ### Register Interceptor in App
 
-- [ ] T018 [US2] Update `src/app/app.module.ts` to register `AuthInterceptor` as HTTP_INTERCEPTORS provider
+- [x] T018 [US2] Update `src/app/app.module.ts` to register `AuthInterceptor` as HTTP_INTERCEPTORS provider
 
 - [ ] T019 [US2] Create test in app module to verify interceptor is properly registered (can be added to app.component.spec.ts)
 
@@ -144,7 +144,7 @@
 
 ### Tickets API Service
 
-- [ ] T020 [US3] Create `src/app/tickets/services/tickets-api.service.ts` with:
+- [x] T020 [US3] Create `src/app/tickets/services/tickets-api.service.ts` with:
   - `getTickets(page?: number, size?: number): Observable<TicketsResponse>` method
   - Call `GET /api/v1/tickets/all` endpoint with proper query params
   - Return transformed Ticket array
@@ -160,7 +160,7 @@
 
 ### Update Tickets State Service
 
-- [ ] T022 [US3] Update `src/app/tickets/services/tickets-state.service.ts` to:
+- [x] T022 [US3] Update `src/app/tickets/services/tickets-state.service.ts` to:
   - Inject `TicketsApiService`
   - Add `tickets$: Observable<Ticket[]>` subject
   - Add `loading$: Observable<boolean>` subject
@@ -181,19 +181,19 @@
 
 ### Update TicketsListPage Component
 
-- [ ] T024 [US3] Update `src/app/tickets/pages/tickets-list-page/tickets-list-page.component.ts` to:
+- [x] T024 [US3] Update `src/app/tickets/pages/tickets-list-page/tickets-list-page.component.ts` to:
   - Inject `TicketsStateService`
   - Call `loadTickets()` on component init (ngOnInit)
   - Subscribe to `tickets$`, `loading$`, `error$` observables
   - Handle unsubscribe on destroy (use takeUntil pattern)
 
-- [ ] T025 [US3] Update `src/app/tickets/pages/tickets-list-page/tickets-list-page.component.html` to:
+- [x] T025 [US3] Update `src/app/tickets/pages/tickets-list-page/tickets-list-page.component.html` to:
   - Display loading spinner/skeleton while `loading$ | async` is true
   - Display ticket table when tickets$ has data
   - Display empty state when `(tickets$ | async)?.length === 0` and not loading
   - Bind ticket data to existing `TicketsTableComponent`
 
-- [ ] T026 [US3] Update component test `src/app/tickets/pages/tickets-list-page/tickets-list-page.component.spec.ts` to verify:
+- [x] T026 [US3] Update component test `src/app/tickets/pages/tickets-list-page/tickets-list-page.component.spec.ts` to verify:
   - Component initializes and calls loadTickets()
   - Loading state is visible on init
   - Tickets are displayed when data arrives
