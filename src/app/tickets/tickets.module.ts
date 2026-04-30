@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
 
 // Routing
 import { TicketsRoutingModule } from './tickets-routing.module';
@@ -51,6 +52,7 @@ import { ErrorStateComponent } from './components/shared/states/error-state.comp
     MatButtonModule,
     MatProgressSpinnerModule,
     MatCardModule,
+    MatIconModule,
     // Routing
     TicketsRoutingModule,
   ],

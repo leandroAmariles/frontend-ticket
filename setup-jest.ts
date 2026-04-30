@@ -1,14 +1,26 @@
 import 'jest-preset-angular/setup-jest';
 import '@testing-library/jest-dom';
 
-// Mock localStorage
+// Mock localStorage with actual storage implementation
+const localStorageMock = (() => {
+  let store: { [key: string]: string } = {};
+
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => {
+      store[key] = value.toString();
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+
 Object.defineProperty(window, 'localStorage', {
-  value: {
-    getItem: jest.fn(),
-    setItem: jest.fn(),
-    removeItem: jest.fn(),
-    clear: jest.fn(),
-  },
+  value: localStorageMock,
 });
 
 // Polyfill Element.animate for jsdom (used by Angular animations / Material)

@@ -233,7 +233,7 @@ export class AuthService {
    * @returns Observable<boolean> - true if session is expired
    */
   sessionExpired(): Observable<boolean> {
-    return this.isAuthenticated$.pipe(map(isAuth => !isAuth && !this.isTokenValid()));
+    return this.isAuthenticated$.pipe(map(() => !this.isTokenValid()));
   }
 
   /**
