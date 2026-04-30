@@ -16,63 +16,48 @@
 
   <!-- Form -->
   <form [formGroup]="createForm" (ngSubmit)="onSubmit()" class="create-form">
-    <!-- Title Field -->
+    <!-- Titulo Field -->
     <mat-form-field appearance="outline" class="form-field">
-      <mat-label>Title *</mat-label>
+      <mat-label>Título *</mat-label>
       <input
         matInput
-        formControlName="title"
-        data-testid="input-title"
-        placeholder="Brief description of the issue"
+        formControlName="titulo"
+        data-testid="input-titulo"
+        placeholder="Brief title of the ticket"
         required
       />
-      <mat-error *ngIf="title?.touched && title?.errors?.['required']">
-        Title is required
+      <mat-error *ngIf="titulo?.touched && titulo?.errors?.['required']">
+        Título is required
       </mat-error>
-      <mat-error *ngIf="title?.touched && title?.errors?.['minlength']">
-        Title must be at least 3 characters
+      <mat-error *ngIf="titulo?.touched && titulo?.errors?.['minlength']">
+        Título must be at least 3 characters
       </mat-error>
-      <mat-error *ngIf="title?.touched && title?.errors?.['maxlength']">
-        Title cannot exceed 200 characters
+      <mat-error *ngIf="titulo?.touched && titulo?.errors?.['maxlength']">
+        Título cannot exceed 200 characters
       </mat-error>
     </mat-form-field>
 
-    <!-- Description Field -->
+    <!-- Descripción Field -->
     <mat-form-field appearance="outline" class="form-field">
-      <mat-label>Description *</mat-label>
+      <mat-label>Descripción *</mat-label>
       <textarea
         matInput
-        formControlName="description"
-        data-testid="input-description"
+        formControlName="descripcion"
+        data-testid="input-descripcion"
         placeholder="Detailed description of the issue"
         rows="5"
         required
       ></textarea>
-      <mat-error *ngIf="description?.touched && description?.errors?.['required']">
-        Description is required
+      <mat-error *ngIf="descripcion?.touched && descripcion?.errors?.['required']">
+        Descripción is required
       </mat-error>
-      <mat-error *ngIf="description?.touched && description?.errors?.['minlength']">
-        Description must be at least 5 characters
+      <mat-error *ngIf="descripcion?.touched && descripcion?.errors?.['minlength']">
+        Descripción must be at least 5 characters
       </mat-error>
-      <mat-error *ngIf="description?.touched && description?.errors?.['maxlength']">
-        Description cannot exceed 2000 characters
+      <mat-error *ngIf="descripcion?.touched && descripcion?.errors?.['maxlength']">
+        Descripción cannot exceed 2000 characters
       </mat-error>
-      <mat-hint align="end">{{ description?.value?.length || 0 }}/2000</mat-hint>
-    </mat-form-field>
-
-    <!-- Priority Field -->
-    <mat-form-field appearance="outline" class="form-field">
-      <mat-label>Priority *</mat-label>
-      <mat-select
-        formControlName="priority"
-        data-testid="select-priority"
-        required
-      >
-        <mat-option *ngFor="let option of priorityOptions" [value]="option.value">
-          {{ option.label }}
-        </mat-option>
-      </mat-select>
-      <mat-error>Priority is required</mat-error>
+      <mat-hint align="end">{{ descripcion?.value?.length || 0 }}/2000</mat-hint>
     </mat-form-field>
 
     <!-- Status Field -->
@@ -90,40 +75,27 @@
       <mat-error>Status is required</mat-error>
     </mat-form-field>
 
-    <!-- Assigned To Field (Optional) -->
-    <mat-form-field appearance="outline" class="form-field">
-      <mat-label>Assigned To (Optional)</mat-label>
-      <mat-select
-        formControlName="assigned_to_id"
-        data-testid="select-assigned"
-      >
-        <mat-option value="">Unassigned</mat-option>
-        <!-- Options would be populated from a user list -->
-        <!-- Example: <mat-option *ngFor="let user of users" [value]="user.id">{{ user.name }}</mat-option> -->
-      </mat-select>
-    </mat-form-field>
-
     <!-- Form Actions -->
     <div class="form-actions">
       <button
         mat-raised-button
         color="primary"
         type="submit"
-        [disabled]="isSubmitting || createForm.invalid"
+        [disabled]="createForm.invalid || isSubmitting"
         data-testid="btn-submit"
       >
         {{ isSubmitting ? 'Creating...' : 'Create Ticket' }}
       </button>
       <button
-        mat-stroked-button
+        mat-button
         type="button"
         (click)="onCancel()"
         data-testid="btn-cancel"
-        [disabled]="isSubmitting"
       >
         Cancel
       </button>
     </div>
   </form>
 </div>
+
 

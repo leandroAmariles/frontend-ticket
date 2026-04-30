@@ -2,11 +2,11 @@ import { Ticket, CreateTicketPayload } from '../models';
 
 /**
  * Maps API ticket data to UI format
+ * Currently a pass-through as API format matches UI format
  */
 export function mapApiTicketToUi(apiTicket: Ticket): Ticket {
   return {
     ...apiTicket,
-    assigned_to_name: apiTicket.assigned_to_name || 'Unassigned',
   };
 }
 
@@ -15,39 +15,19 @@ export function mapApiTicketToUi(apiTicket: Ticket): Ticket {
  */
 export function mapCreateFormToApi(formData: any): CreateTicketPayload {
   return {
-    title: formData.title,
-    description: formData.description,
-    priority: formData.priority,
-    status: formData.status || 'open',
-    assigned_to_id: formData.assigned_to_id || null,
-    assigned_to_name: formData.assigned_to_name || null,
+    titulo: formData.titulo,
+    descripcion: formData.descripcion,
+    status: formData.status || 'PENDING',
   };
 }
 
 /**
- * Priority label mappings (canonical to localized)
- */
-export const PRIORITY_LABELS: Record<string, string> = {
-  low: 'Baja',
-  medium: 'Media',
-  high: 'Alta',
-};
-
-/**
- * Status label mappings (canonical to localized)
+ * Status label mappings for backend values
  */
 export const STATUS_LABELS: Record<string, string> = {
-  open: 'Abierto',
-  in_progress: 'En progreso',
-  closed: 'Cerrado',
+  'PENDING': 'Pendiente',
+  'CREATED': 'Creado',
 };
-
-/**
- * Get localized priority label
- */
-export function getPriorityLabel(priority: string): string {
-  return PRIORITY_LABELS[priority] || priority;
-}
 
 /**
  * Get localized status label
@@ -61,19 +41,23 @@ export function getStatusLabel(status: string): string {
  * Assumes ISO 8601 UTC format from API
  */
 export function formatDateForDisplay(dateString: string, locale: string = 'es-ES'): string {
-  const date = new Date(dateString);
-  // If date is invalid, return original input so tests can assert expected behavior
-  if (isNaN(date.getTime())) {
+  try {
+    const date = new Date(dateString);
+    // If date is invalid, return original input
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
+
+    return date.toLocaleDateString(locale, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
     return dateString;
   }
-
-  return date.toLocaleDateString(locale, {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 /**

@@ -1,16 +1,47 @@
 /**
  * Ticket entity interface
- * Represents a support ticket in the system
+ * Represents a support ticket in the backend system
+ * Mapped to actual backend fields: id, titulo, descripcion, status, creatorId, fecha, createdAt, updatedAt
  */
 export interface Ticket {
   id: string; // UUID v4
-  title: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high';
-  status: 'open' | 'in_progress' | 'closed';
-  assigned_to_id?: string | null; // UUID v4 of assigned user
-  assigned_to_name?: string | null; // Display name of assigned user
-  created_at: string; // ISO 8601 UTC format
+  titulo: string; // Backend field name (Spanish: title)
+  descripcion: string; // Backend field name (Spanish: description)
+  status: 'PENDING' | 'CREATED'; // Backend ticket status values
+  creatorId: string; // UUID v4 of ticket creator
+  fecha: string; // Ticket date field
+  createdAt: string; // ISO 8601 UTC format - Creation timestamp
+  updatedAt: string; // ISO 8601 UTC format - Last update timestamp
+}
+
+/**
+ * Pagination metadata from API responses
+ */
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  size: number;
+  totalPages: number;
+}
+
+/**
+ * GET /api/v1/tickets/all API response structure
+ */
+export interface TicketsResponse {
+  items: Ticket[];
+  page: number;
+  size: number;
+  total: number;
+  totalPages: number;
+}
+
+/**
+ * GET /api/v1/tickets/all API request parameters
+ */
+export interface TicketsListParams {
+  page?: number; // Default: 0
+  size?: number; // Default: 20
+  sort?: string; // Optional sorting
 }
 
 /**
@@ -24,44 +55,12 @@ export interface User {
 }
 
 /**
- * Pagination metadata from API responses
- */
-export interface PaginationMeta {
-  total: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
-}
-
-/**
- * Get /tickets API response structure
- */
-export interface TicketsListResponse {
-  data: Ticket[];
-  meta: PaginationMeta;
-}
-
-/**
- * Get /tickets API request parameters
- */
-export interface TicketsListParams {
-  page?: number;
-  page_size?: number;
-  priority?: 'low' | 'medium' | 'high';
-  status?: 'open' | 'in_progress' | 'closed';
-  sort?: string; // Format: <field>:<direction> e.g., "created_at:desc"
-}
-
-/**
  * Post /tickets API request payload
  */
 export interface CreateTicketPayload {
-  title: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high';
-  status: 'open' | 'in_progress' | 'closed';
-  assigned_to_id?: string | null;
-  assigned_to_name?: string | null;
+  titulo: string;
+  descripcion: string;
+  status: 'PENDING' | 'CREATED';
 }
 
 /**

@@ -8,7 +8,13 @@ import { TicketsApiService } from '../../services/tickets-api.service';
 import { TicketsStateService } from '../../services/tickets-state.service';
 import { mapCreateFormToApi } from '../../utils/transformers';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
+import { Ticket } from '../../models';
 
+/**
+ * Ticket Create Page Component
+ * NOTE: This component is a stub for the 002-consume-backend-api feature
+ * The createTicket API endpoint is out of scope and will be implemented later
+ */
 @Component({
   selector: 'app-ticket-create-page',
   templateUrl: './ticket-create-page.component.html',
@@ -20,16 +26,9 @@ export class TicketCreatePageComponent implements OnInit, OnDestroy {
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
-  priorityOptions = [
-    { label: 'Baja', value: 'low' },
-    { label: 'Media', value: 'medium' },
-    { label: 'Alta', value: 'high' },
-  ];
-
   statusOptions = [
-    { label: 'Abierto', value: 'open' },
-    { label: 'En progreso', value: 'in_progress' },
-    { label: 'Cerrado', value: 'closed' },
+    { label: 'Pendiente', value: 'PENDING' },
+    { label: 'Creado', value: 'CREATED' },
   ];
 
   private destroy$ = new Subject<void>();
@@ -58,12 +57,9 @@ export class TicketCreatePageComponent implements OnInit, OnDestroy {
    */
   private initializeForm(): void {
     this.createForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
-      description: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(2000)]],
-      priority: ['medium', [Validators.required]],
-      status: ['open', [Validators.required]],
-      assigned_to_id: [null],
-      assigned_to_name: [null],
+      titulo: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
+      descripcion: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(2000)]],
+      status: ['PENDING', [Validators.required]],
     });
   }
 
@@ -86,8 +82,8 @@ export class TicketCreatePageComponent implements OnInit, OnDestroy {
       .createTicket(payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (createdTicket) => {
-          this.successMessage = `Ticket "${createdTicket.title}" created successfully!`;
+        next: (createdTicket: Ticket) => {
+          this.successMessage = `Ticket "${createdTicket.titulo}" created successfully!`;
           this.isSubmitting = false;
 
           // Re-query to ensure the ticket appears in the list
@@ -100,9 +96,9 @@ export class TicketCreatePageComponent implements OnInit, OnDestroy {
             takeUntil(this.destroy$)
           ).subscribe();
         },
-        error: (error) => {
+        error: (error: any) => {
           this.isSubmitting = false;
-          this.errorMessage = error?.error?.message || 'Failed to create ticket. Please try again.';
+          this.errorMessage = error?.message || 'Failed to create ticket. Please try again.';
           this.errorHandler.handleError(error, 'TicketCreatePage.onSubmit');
         },
       });
@@ -125,16 +121,12 @@ export class TicketCreatePageComponent implements OnInit, OnDestroy {
   /**
    * Get form control for template
    */
-  get title() {
-    return this.createForm.get('title');
+  get titulo() {
+    return this.createForm.get('titulo');
   }
 
-  get description() {
-    return this.createForm.get('description');
-  }
-
-  get priority() {
-    return this.createForm.get('priority');
+  get descripcion() {
+    return this.createForm.get('descripcion');
   }
 
   get status() {

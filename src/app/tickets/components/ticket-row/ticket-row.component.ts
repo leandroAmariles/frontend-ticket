@@ -3,7 +3,7 @@ import { Ticket } from '../../models';
 
 @Component({
   selector: 'app-ticket-row',
-  template: `<div class="ticket-row">{{ ticket?.title }}</div>`,
+  template: `<div class="ticket-row">{{ ticket?.titulo }}</div>`,
   styles: [
     `
       .ticket-row {

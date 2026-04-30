@@ -1,123 +1,97 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of, timer, Subject } from 'rxjs';
-import { debounceTime, switchMap, takeUntil, tap, catchError } from 'rxjs/operators';
+import { Injectable, OnDestroy } from '@angular/core';
+import { BehaviorSubject, Observable, Subject, of } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
-import { environment } from '../../../environments/environment';
-import { Ticket, TicketsListParams, TicketsListResponse } from '../models';
+import { Ticket, TicketsResponse } from '../models';
 import { TicketsApiService } from './tickets-api.service';
 
+/**
+ * Tickets State Service
+ * Manages global state for the tickets feature
+ * Responsibilities:
+ * - Maintain current tickets list, loading state, and error messages
+ * - Coordinate API calls via TicketsApiService
+ * - Handle state transitions (loading → success/error → idle)
+ * - Provide observables for component consumption
+ * - Clean up subscriptions on service destroy
+ */
 @Injectable({
   providedIn: 'root',
 })
-export class TicketsStateService {
+export class TicketsStateService implements OnDestroy {
   // State subjects
-  private ticketsSubject = new BehaviorSubject<Ticket[]>([]);
-  public tickets$ = this.ticketsSubject.asObservable();
+  private readonly ticketsSubject = new BehaviorSubject<Ticket[]>([]);
+  public readonly tickets$ = this.ticketsSubject.asObservable();
 
-  private metaSubject = new BehaviorSubject<any>(null);
-  public meta$ = this.metaSubject.asObservable();
+  private readonly loadingSubject = new BehaviorSubject<boolean>(false);
+  public readonly loading$ = this.loadingSubject.asObservable();
 
-  private loadingSubject = new BehaviorSubject<boolean>(false);
-  public loading$ = this.loadingSubject.asObservable();
+  private readonly errorSubject = new BehaviorSubject<string | null>(null);
+  public readonly error$ = this.errorSubject.asObservable();
 
-  private errorSubject = new BehaviorSubject<string | null>(null);
-  public error$ = this.errorSubject.asObservable();
+  // Pagination metadata
+  private readonly paginationSubject = new BehaviorSubject<{
+    page: number;
+    size: number;
+    total: number;
+    totalPages: number;
+  } | null>(null);
+  public readonly pagination$ = this.paginationSubject.asObservable();
 
-  // Current query parameters
-  private currentParams: TicketsListParams = {
-    page: 1,
-    page_size: 25,
-  };
-
-  // Re-query configuration
-  private readonly reQueryConfig = environment.reQuery;
+  // Cleanup signal
+  private readonly destroy$ = new Subject<void>();
 
   constructor(private apiService: TicketsApiService) {}
 
   /**
-   * Fetch tickets with given parameters
+   * Load tickets from the API
+   * Manages loading and error states automatically
+   *
+   * @param page - Page number (0-indexed), defaults to 0
+   * @param size - Page size, defaults to 20
    */
-  refresh(params?: Partial<TicketsListParams>): Observable<TicketsListResponse> {
-    if (params) {
-      this.currentParams = { ...this.currentParams, ...params };
-    }
-
+  loadTickets(page: number = 0, size: number = 20): void {
+    // Set loading state
     this.loadingSubject.next(true);
     this.errorSubject.next(null);
 
-    return this.apiService.listTickets(this.currentParams).pipe(
-      tap((response: TicketsListResponse) => {
-        this.ticketsSubject.next(response.data);
-        this.metaSubject.next(response.meta);
-        this.loadingSubject.next(false);
-      }),
-      catchError((error) => {
-        this.errorSubject.next(error?.message || 'Failed to fetch tickets');
-        this.loadingSubject.next(false);
-        throw error;
-      })
-    );
+    // Call API service
+    this.apiService
+      .getTickets(page, size)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: TicketsResponse) => {
+          this.handleSuccess(response);
+        },
+        error: (error: any) => {
+          this.handleError(error);
+        },
+      });
   }
 
   /**
-   * Re-query strategy: poll for a newly created ticket with exponential backoff
-   * This ensures newly created tickets appear in the list within the target window
+   * Handle successful API response
+   * Updates tickets and pagination state
    */
-  reQueryForNewTicket(
-    targetTicketId: string,
-    onSuccess?: (ticket: Ticket) => void
-  ): Observable<Ticket | null> {
-    const { initialInterval, maxInterval, maxDuration, backoffMultiplier = 2 } = this.reQueryConfig;
+  private handleSuccess(response: TicketsResponse): void {
+    this.ticketsSubject.next(response.items);
+    this.paginationSubject.next({
+      page: response.page,
+      size: response.size,
+      total: response.total,
+      totalPages: response.totalPages,
+    });
+    this.loadingSubject.next(false);
+  }
 
-    let currentInterval = initialInterval;
-    let elapsedTime = 0;
-    const startTime = Date.now();
-
-    // Start polling after the initial interval (matches test expectations)
-    return timer(currentInterval, currentInterval).pipe(
-      switchMap(() => {
-        elapsedTime = Date.now() - startTime;
-
-        // Check if we've exceeded max duration
-        if (elapsedTime > maxDuration) {
-          console.warn(`Re-query timeout: ticket ${targetTicketId} not found within ${maxDuration}ms`);
-          return of(null);
-        }
-
-        // Fetch current tickets
-        return this.apiService.listTickets({
-          page: 1,
-          page_size: this.currentParams.page_size || 25,
-        }).pipe(
-          tap((response: TicketsListResponse) => {
-            // Update the ticket found in response
-            const foundTicket = response.data.find((t) => t.id === targetTicketId);
-            if (foundTicket && onSuccess) {
-              onSuccess(foundTicket);
-            }
-          }),
-          catchError(() => of(null))
-        );
-      }),
-      switchMap((response) => {
-        if (!response) {
-          return of(null);
-        }
-
-        const foundTicket = response.data.find((t) => t.id === targetTicketId);
-        if (foundTicket) {
-          // Ticket found, stop polling
-          return of(foundTicket);
-        }
-
-        // Ticket not found yet, continue polling with backoff
-        currentInterval = Math.min(currentInterval * backoffMultiplier, maxInterval);
-        return timer(currentInterval).pipe(
-          switchMap(() => of(null))
-        );
-      }),
-      takeUntil(this.getStopReQuerySignal())
-    );
+  /**
+   * Handle API error response
+   * Extracts user-friendly message and updates error state
+   */
+  private handleError(error: any): void {
+    const errorMessage = error?.message || 'Failed to load tickets. Please try again.';
+    this.errorSubject.next(errorMessage);
+    this.loadingSubject.next(false);
   }
 
   /**
@@ -135,63 +109,38 @@ export class TicketsStateService {
   }
 
   /**
-   * Update current query parameters
+   * Re-query for a new ticket (placeholder for future implementation)
+   * NOTE: This feature is out of scope for the 002-consume-backend-api feature
+   *
+   * @param targetTicketId - ID of ticket to search for
+   * @param onSuccess - Callback when ticket is found
+   * @returns Observable that completes when ticket is found or timeout
    */
-  setParams(params: Partial<TicketsListParams>): void {
-    this.currentParams = { ...this.currentParams, ...params };
+  reQueryForNewTicket(
+    targetTicketId: string,
+    onSuccess?: (ticket: Ticket) => void
+  ): Observable<Ticket | null> {
+    // TODO: Implement re-query logic for newly created tickets
+    return of(null);
   }
 
   /**
-   * Get current parameters
-   */
-  getParams(): TicketsListParams {
-    return { ...this.currentParams };
-  }
-
-  /**
-   * Signal to stop re-query polling (e.g., when user navigates away)
-   */
-  // Signal subject to stop re-query polling; start as a Subject so it does not
-  // emit until cancelReQuery() is called. Using BehaviorSubject caused the
-  // signal to emit immediately and stop polling right away.
-  private stopReQuerySubject = new Subject<void>();
-
-  private getStopReQuerySignal(): Observable<void> {
-    return this.stopReQuerySubject.asObservable();
-  }
-
-  /**
-   * Cancel ongoing re-query polling
-   */
-  cancelReQuery(): void {
-    this.stopReQuerySubject.next();
-  }
-
-  /**
-   * Reset state (useful when component is destroyed or user navigates away)
+   * Clear all state (useful when component is destroyed or user navigates away)
    */
   reset(): void {
     this.ticketsSubject.next([]);
-    this.metaSubject.next(null);
+    this.paginationSubject.next(null);
     this.loadingSubject.next(false);
     this.errorSubject.next(null);
-    this.cancelReQuery();
   }
 
   /**
-   * Client-side fallback sorting: when backend does not support sorting by a field
-   * (for example assigned_to_name), apply a locale-aware sort to the currently
-   * loaded page of tickets.
+   * Angular lifecycle hook
+   * Cleans up subscriptions when service is destroyed
    */
-  applyClientSideSort(field: keyof Ticket, direction: 'asc' | 'desc' = 'asc') {
-    const current = [...this.ticketsSubject.value];
-    current.sort((a: any, b: any) => {
-      const va = (a[field] || '').toString();
-      const vb = (b[field] || '').toString();
-      const cmp = va.localeCompare(vb, 'es', { sensitivity: 'base' });
-      return direction === 'asc' ? cmp : -cmp;
-    });
-    this.ticketsSubject.next(current);
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
 

@@ -13,33 +13,48 @@
     </button>
   </div>
 
-  <!-- Error state -->
-  <div *ngIf="error$ | async as error" class="error-message">
-    <p>{{ error }}</p>
-    <button mat-button (click)="refresh()">Retry</button>
+  <!-- Error state with retry button -->
+  <div *ngIf="error$ | async as error" class="error-section" role="alert" aria-live="polite">
+    <mat-card class="error-message">
+      <mat-card-content>
+        <p class="error-text">{{ error }}</p>
+        <button mat-raised-button color="accent" (click)="onRetry()" data-testid="btn-retry">
+          Retry
+        </button>
+      </mat-card-content>
+    </mat-card>
   </div>
-
-  <!-- Filters -->
-  <app-ticket-filters
-    (filtersChange)="onFiltersChange($event)"
-  ></app-ticket-filters>
 
   <!-- Loading state -->
   <div *ngIf="loading$ | async" class="loading-state">
-    <mat-spinner diameter="50"></mat-spinner>
+    <mat-spinner diameter="50" aria-label="Loading tickets..."></mat-spinner>
     <p>Loading tickets...</p>
   </div>
 
-  <!-- Tickets table -->
-  <div *ngIf="!(loading$ | async)" class="table-container">
+  <!-- Tickets table (shown only when not loading and no error) -->
+  <div *ngIf="(loading$ | async) === false && !(error$ | async)" class="table-container">
+    <!-- Empty state -->
+    <div *ngIf="(tickets$ | async)?.length === 0" class="empty-state">
+      <p>No tickets found.</p>
+      <button mat-button (click)="navigateToCreate()">Create your first ticket</button>
+    </div>
+
+    <!-- Tickets table -->
     <app-tickets-table
-      [tickets]="(tickets$ | async) || []"
-      [meta]="(meta$ | async) || null"
+      *ngIf="(tickets$ | async) as tickets; else noTickets"
+      [tickets]="tickets"
+      [pagination]="(pagination$ | async)"
       (pageChange)="onPageChange($event)"
-      (sortChange)="onSortChange($event)"
-      [currentPage]="currentParams.page || 1"
-      [pageSize]="currentParams.page_size || 25"
+      [dataTestId]="'tickets-table'"
     ></app-tickets-table>
+
+    <ng-template #noTickets>
+      <div class="text-center py-8">
+        <p>No tickets to display</p>
+      </div>
+    </ng-template>
   </div>
 </div>
+
+
 

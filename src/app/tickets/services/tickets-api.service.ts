@@ -1,62 +1,196 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
-import { environment } from '../../../environments/environment';
 import {
   Ticket,
   TicketsListParams,
-  TicketsListResponse,
+  TicketsResponse,
   CreateTicketPayload,
 } from '../models';
+import { ErrorHandlerService } from '../../core/services/error-handler.service';
 
+/**
+ * Tickets API Service
+ * Handles all HTTP communication with the backend tickets API
+ *
+ * Endpoint: GET /api/v1/tickets/all
+ *
+ * Responsibilities:
+ * - Fetch tickets from backend API with pagination support
+ * - Transform and validate API responses
+ * - Handle errors and provide user-friendly messages
+ * - Support query parameters (page, size)
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class TicketsApiService {
-  private readonly apiUrl = `${environment.apiBaseUrl}/tickets`;
+  private readonly API_BASE_URL = 'http://localhost:8080';
+  private readonly TICKETS_ENDPOINT = '/api/v1/tickets/all';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private errorHandlerService: ErrorHandlerService,
+  ) {}
 
   /**
-   * Fetch paginated list of tickets with optional filters and sorting
+   * Fetch tickets from the backend API
+   *
+   * Endpoint: GET /api/v1/tickets/all
+   * Query params: page (default 0), size (default 20)
+   *
+   * @param page - Page number (0-indexed), defaults to 0
+   * @param size - Page size, defaults to 20
+   * @returns Observable<TicketsResponse> containing paginated tickets
+   * @throws HttpErrorResponse if the request fails
    */
-  listTickets(params?: TicketsListParams): Observable<TicketsListResponse> {
+  getTickets(page: number = 0, size: number = 20): Observable<TicketsResponse> {
     let httpParams = new HttpParams();
+    httpParams = httpParams.set('page', page.toString());
+    httpParams = httpParams.set('size', size.toString());
 
-    if (params) {
-      if (params.page !== undefined) {
-        httpParams = httpParams.set('page', params.page.toString());
-      }
-      if (params.page_size !== undefined) {
-        httpParams = httpParams.set('page_size', params.page_size.toString());
-      }
-      if (params.priority) {
-        httpParams = httpParams.set('priority', params.priority);
-      }
-      if (params.status) {
-        httpParams = httpParams.set('status', params.status);
-      }
-      if (params.sort) {
-        httpParams = httpParams.set('sort', params.sort);
-      }
-    }
-
-    return this.http.get<TicketsListResponse>(this.apiUrl, { params: httpParams });
+    return this.http
+      .get<TicketsResponse>(`${this.API_BASE_URL}${this.TICKETS_ENDPOINT}`, {
+        params: httpParams,
+      })
+      .pipe(
+        map((response: any) => {
+          // Ensure response has the expected structure
+          return this.validateAndTransformResponse(response);
+        }),
+        catchError((error: HttpErrorResponse) => {
+          return this.handleError(error);
+        })
+      );
   }
 
   /**
-   * Create a new ticket
+   * Create a new ticket (placeholder for future implementation)
+   * NOTE: This feature is out of scope for the 002-consume-backend-api feature
+   *
+   * @param payload - Ticket creation payload
+   * @returns Observable<Ticket> - Created ticket
    */
   createTicket(payload: CreateTicketPayload): Observable<Ticket> {
-    return this.http.post<Ticket>(this.apiUrl, payload);
+    // TODO: Implement ticket creation endpoint
+    return throwError(() => ({
+      message: 'Ticket creation is not yet implemented',
+      status: 501,
+    }));
   }
 
   /**
-   * Get a specific ticket by ID
+   * Validate and transform the API response to match TicketsResponse interface
+   * Ensures data integrity before passing to consumers
+   *
+   * @param response - Raw HTTP response from API
+   * @returns Validated TicketsResponse
    */
-  getTicketById(id: string): Observable<Ticket> {
-    return this.http.get<Ticket>(`${this.apiUrl}/${id}`);
+  private validateAndTransformResponse(response: any): TicketsResponse {
+    // Validate required fields
+    if (!response.items || !Array.isArray(response.items)) {
+      throw new Error('Invalid API response: missing or invalid "items" field');
+    }
+
+    if (response.page === undefined || response.size === undefined) {
+      throw new Error('Invalid API response: missing pagination metadata');
+    }
+
+    // Validate each ticket has required fields
+    response.items.forEach((ticket: any, index: number) => {
+      this.validateTicket(ticket, index);
+    });
+
+    return {
+      items: response.items,
+      page: response.page,
+      size: response.size,
+      total: response.total || 0,
+      totalPages: response.totalPages || 0,
+    };
+  }
+
+  /**
+   * Validate that a ticket object has required fields
+   *
+   * @param ticket - Ticket object to validate
+   * @param index - Index for error reporting
+   * @throws Error if required fields are missing
+   */
+  private validateTicket(ticket: any, index: number): void {
+    const requiredFields = ['id', 'titulo', 'descripcion', 'status', 'createdAt', 'updatedAt'];
+    const missingFields = requiredFields.filter(field => !(field in ticket));
+
+    if (missingFields.length > 0) {
+      throw new Error(
+        `Invalid ticket at index ${index}: missing fields [${missingFields.join(', ')}]`
+      );
+    }
+
+    // Validate status values
+    if (!['PENDING', 'CREATED'].includes(ticket.status)) {
+      throw new Error(
+        `Invalid ticket at index ${index}: invalid status value "${ticket.status}". Expected PENDING or CREATED.`
+      );
+    }
+  }
+
+  /**
+   * Handle API errors and provide user-friendly messages
+   *
+   * @param error - HttpErrorResponse from failed request
+   * @returns Observable that throws user-friendly error
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string;
+
+    if (error.status === 401) {
+      // 401: Unauthorized - handled by interceptor, but catch here too
+      errorMessage = 'Your session has expired. Please login again.';
+    } else if (error.status === 403) {
+      // 403: Forbidden
+      errorMessage = 'You do not have permission to view tickets.';
+    } else if (error.status === 400) {
+      // 400: Bad Request
+      errorMessage = 'Invalid request. Please check your parameters.';
+    } else if (error.status >= 500) {
+      // 5xx: Server Error
+      errorMessage = 'Server error. Please try again later.';
+    } else if (error.status === 0) {
+      // Network error
+      errorMessage = 'Unable to connect to the server. Please check your connection.';
+    } else {
+      errorMessage = `Failed to load tickets: ${error.statusText || 'Unknown error'}`;
+    }
+
+    // Log error with context for debugging
+    this.logErrorContext({
+      endpoint: this.TICKETS_ENDPOINT,
+      statusCode: error.status,
+      timestamp: new Date().toISOString(),
+      userMessage: errorMessage,
+      error: error.error,
+    });
+
+    return throwError(() => ({
+      status: error.status,
+      message: errorMessage,
+      originalError: error,
+    }));
+  }
+
+  /**
+   * Log error context for debugging and monitoring
+   *
+   * @param context - Error context information
+   */
+  private logErrorContext(context: any): void {
+    console.error('[TicketsApiService] Error occurred:', context);
+    // In production, would send to error tracking service (Sentry, etc.)
   }
 }
+
+
 

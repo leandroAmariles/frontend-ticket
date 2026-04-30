@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+import { AuthService } from './core/services/auth.service';
 
 @NgModule({
   declarations: [
@@ -20,6 +21,10 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
     AppRoutingModule,
   ],
   providers: [
+    // Core services (singletons)
+    AuthService,
+
+    // HTTP Interceptors
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,

@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
-// Angular Material imports (will be completed in T002)
+// Angular Material imports
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
@@ -10,6 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCardModule } from '@angular/material/card';
 
 // Routing
 import { TicketsRoutingModule } from './tickets-routing.module';
@@ -49,6 +50,7 @@ import { ErrorStateComponent } from './components/shared/states/error-state.comp
     MatSelectModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    MatCardModule,
     // Routing
     TicketsRoutingModule,
   ],

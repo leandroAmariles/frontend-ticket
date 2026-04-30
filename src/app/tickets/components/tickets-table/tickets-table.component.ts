@@ -1,15 +1,13 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
-import { Sort } from '@angular/material/sort';
 
-import { Ticket, PaginationMeta } from '../../models';
-import {
-  getPriorityLabel,
-  getStatusLabel,
-  formatDateForDisplay,
-  truncateText,
-} from '../../utils/transformers';
+import { Ticket } from '../../models';
 
+/**
+ * Tickets Table Component
+ * Displays paginated table of tickets with sortable columns
+ * Uses Angular Material table for accessibility and responsive design
+ */
 @Component({
   selector: 'app-tickets-table',
   templateUrl: './tickets-table.component.html',
@@ -17,31 +15,28 @@ import {
 })
 export class TicketsTableComponent implements OnInit {
   @Input() tickets: Ticket[] = [];
-  @Input() meta: PaginationMeta | null = null;
-  @Input() currentPage: number = 1;
-  @Input() pageSize: number = 25;
+  @Input() pagination: { page: number; size: number; total: number; totalPages: number } | null = null;
   @Input() isLoading: boolean = false;
+  @Input() dataTestId: string = 'tickets-table';
 
   @Output() pageChange = new EventEmitter<PageEvent>();
-  @Output() sortChange = new EventEmitter<string>();
 
   displayedColumns: string[] = [
     'id',
-    'title',
-    'priority',
+    'titulo',
     'status',
-    'assignedTo',
+    'creatorId',
     'createdAt',
   ];
 
-  pageSizeOptions = [25, 50];
-  totalItems = 0;
+  pageSizeOptions = [10, 20, 50];
+  currentPageSize = 20;
 
   constructor() {}
 
   ngOnInit(): void {
-    if (this.meta) {
-      this.totalItems = this.meta.total;
+    if (this.pagination) {
+      this.currentPageSize = this.pagination.size;
     }
   }
 
@@ -53,42 +48,42 @@ export class TicketsTableComponent implements OnInit {
   }
 
   /**
-   * Handle sort events from MatSort
+   * Get status label for display
    */
-  onSortChange(sortState: Sort): void {
-    let sortParam = '';
-
-    if (sortState.direction) {
-      sortParam = `${sortState.active}:${sortState.direction}`;
-      this.sortChange.emit(sortParam);
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'PENDING':
+        return 'Pending';
+      case 'CREATED':
+        return 'Created';
+      default:
+        return status;
     }
   }
 
   /**
-   * Transform ticket data for display
+   * Format date for display
    */
-  getPriorityLabel(priority: string): string {
-    return getPriorityLabel(priority);
-  }
-
-  getStatusLabel(status: string): string {
-    return getStatusLabel(status);
-  }
-
   formatDate(date: string): string {
-    return formatDateForDisplay(date);
+    try {
+      const d = new Date(date);
+      return d.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return date;
+    }
   }
 
-  truncateTitle(title: string): string {
-    return truncateText(title, 40);
-  }
-
-  getFullTitle(title: string): string {
-    return title;
-  }
-
-  getAssignedName(ticket: Ticket): string {
-    return ticket.assigned_to_name || 'Unassigned';
+  /**
+   * Truncate title for display
+   */
+  truncateTitle(title: string, maxLength: number = 40): string {
+    return title.length > maxLength ? title.substring(0, maxLength) + '...' : title;
   }
 
   /**
