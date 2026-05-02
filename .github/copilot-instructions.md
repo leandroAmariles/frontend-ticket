@@ -1,6 +1,6 @@
 <!-- SPECKIT START -->
-Current Focus: C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\specs\002-consume-backend-api\plan.md
-Reference: C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\specs\001-tickets-dashboard\plan.md
+Current Focus: C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\specs\003-fix-page-size-selector\plan.md
+Reference: C:\Users\Leandro\IdeaProjects\api-tickets-tfm-ssd\frontend\specs\002-consume-backend-api\plan.md
 <!-- SPECKIT END -->
 
 For additional context about technologies to be used, project structure,
