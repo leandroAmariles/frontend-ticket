@@ -1,0 +1,64 @@
+name: Promote to production - frontend-ticket
+
+# Gate manual de producción, gratuito y sin depender de "Required reviewers"
+# de GitHub Environments (no disponible en plan Free para repos privados —
+# ver CI_CD_LOCAL_PRACTICE_GUIDE.md sección 10.3). El gate real es que este
+# workflow SOLO tiene trigger workflow_dispatch: nadie llega a
+# overlays/prod sin que un humano entre a la pestaña Actions (o corra
+# `gh workflow run promote-to-prod.yml -f version=vX.Y.Z`) y lo dispare a
+# mano, eligiendo explícitamente qué versión promocionar.
+#
+# Deliberadamente NO vive dentro de ci-cd.yml como un job "deploy-prod" con
+# un `if: github.event_name == 'workflow_dispatch'`: dispararlo a mano sobre
+# el tag re-correría TODO ese pipeline (test, build, deploy-staging...), y
+# deploy-staging fallaría con "nothing to commit" al intentar bumpear
+# overlays/staging al mismo tag que ya tiene desde el push original. Este
+# workflow separado no toca nada de eso: solo bumpea overlays/prod.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tag ya verificado en staging a promocionar a prod (ej. v1.2.0)'
+        required: true
+        type: string
+
+env:
+  IMAGE: ghcr.io/leandroamariles/frontend-ticket
+
+jobs:
+  deploy-prod:
+    name: Bump image in ssd-infra (prod)
+    runs-on: ubuntu-latest
+    # "environment: production" no aplica ningún gate real hoy (limitación
+    # de plan Free en repo privado), pero se deja declarado por dos razones:
+    # deja historial de deployments visible en Settings → Environments, y si
+    # más adelante se sube a GitHub Team, "Required reviewers" empezaría a
+    # funcionar sin tocar este YAML.
+    environment: production
+    steps:
+      - name: Checkout ssd-infra
+        uses: actions/checkout@v4
+        with:
+          repository: leandroAmariles/ssd-infra
+          # GITHUB_TOKEN por defecto solo tiene permisos sobre ESTE repo; para
+          # empujar un commit a ssd-infra hace falta un PAT fine-grained con
+          # Contents: Read and write sobre ese repo, guardado como el secret
+          # INFRA_REPO_TOKEN.
+          token: ${{ secrets.INFRA_REPO_TOKEN }}
+          path: ssd-infra
+
+      - uses: imranismail/setup-kustomize@v2
+
+      - name: Bump image tag (overlays/prod)
+        working-directory: ssd-infra/overlays/prod
+        run: |
+          kustomize edit set image ssd/frontend-ticket=${{ env.IMAGE }}:${{ inputs.version }}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(deploy): frontend-ticket -> ${{ inputs.version }} (prod)"
+          git push
+      # k8s/argocd/application-prod.yaml no tiene syncPolicy.automated a
+      # propósito: aunque este commit ya pasó el gate manual de arriba, Argo
+      # CD todavía requiere "argocd app sync ssd-prod" a mano tras revisar
+      # el diff. Doble gate intencional (documentado en ese archivo).

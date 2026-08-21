@@ -1,0 +1,154 @@
+name: CI/CD - frontend-ticket
+
+# Mismo patrón GitOps que backend-ticket/backend-ia: CI (test + Trivy) -> build
+# & push de imagen a GHCR -> en un tag vX.Y.Z, commit a ssd-infra bumpeando el
+# tag de imagen -> Argo CD (dentro del cluster) sincroniza solo. Este repo
+# nunca toca el cluster ni necesita sus credenciales.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+env:
+  IMAGE: ghcr.io/leandroamariles/frontend-ticket
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Unit tests + coverage gate (Jest, >=70% via jest.config.js)
+        run: npm run test:all
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jest-coverage-report
+          path: coverage/
+
+  security-scan-fs:
+    name: Dependency & filesystem scan (Trivy)
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+
+  build-and-push:
+    name: Build & push (:sha, :latest)
+    runs-on: ubuntu-latest
+    needs: [test, security-scan-fs]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ${{ env.IMAGE }}:${{ github.sha }}
+          severity: HIGH,CRITICAL
+
+  build-release-image:
+    name: Build & push release image
+    runs-on: ubuntu-latest
+    needs: [test, security-scan-fs]
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      version: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE }}:${{ github.ref_name }}
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ${{ env.IMAGE }}:${{ github.ref_name }}
+          severity: HIGH,CRITICAL
+
+  deploy-staging:
+    name: Bump image in ssd-infra (staging)
+    runs-on: ubuntu-latest
+    needs: build-release-image
+    environment: staging
+    steps:
+      - name: Checkout ssd-infra
+        uses: actions/checkout@v4
+        with:
+          repository: leandroAmariles/ssd-infra
+          token: ${{ secrets.INFRA_REPO_TOKEN }}
+          path: ssd-infra
+
+      - uses: imranismail/setup-kustomize@v2
+
+      - name: Bump image tag (overlays/staging)
+        working-directory: ssd-infra/overlays/staging
+        run: |
+          kustomize edit set image ssd/frontend-ticket=${{ env.IMAGE }}:${{ needs.build-release-image.outputs.version }}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(deploy): frontend-ticket -> ${{ needs.build-release-image.outputs.version }} (staging)"
+          git push
+
+      # No hay "kubectl rollout status" ni smoke-test aquí: Argo CD detecta
+      # este commit y sincroniza dentro del cluster. El smoke-test real vive
+      # en ssd-infra/.github/workflows/smoke-test-staging.yml, que se dispara
+      # con el push de arriba y SÍ corre en el runner self-hosted (porque ese
+      # es el único repo que necesita alcanzar el cluster kind local).
+
+  # El deploy a producción NO vive en este workflow: ver
+  # .github/workflows/promote-to-prod.yml. Motivo: "Required reviewers" de
+  # GitHub Environments no está disponible en plan Free para repos privados,
+  # así que el gate manual real es que ese workflow solo tiene trigger
+  # workflow_dispatch (nadie llega a prod sin que un humano lo dispare a
+  # mano eligiendo la versión). Si estuviera como job "deploy-prod" aquí
+  # mismo con un `if: workflow_dispatch`, disparar el workflow a mano sobre
+  # el tag re-correría TODO el pipeline, incluido deploy-staging — que
+  # fallaría con "nothing to commit" al intentar bumpear overlays/staging
+  # al mismo tag que ya tiene. Separarlo evita ese problema.
