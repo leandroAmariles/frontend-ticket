@@ -1,0 +1,78 @@
+.knowledge-page {
+  padding: var(--app-spacing-md);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: var(--app-spacing-lg);
+
+  h1 {
+    margin: 0 0 4px 0;
+    font-size: 26px;
+    font-weight: 500;
+  }
+
+  .subtitle {
+    margin: 0;
+    color: var(--app-text-secondary);
+  }
+}
+
+.error-message {
+  padding: var(--app-spacing-md);
+  margin-bottom: var(--app-spacing-md);
+  background-color: var(--app-error-bg);
+  color: var(--app-error);
+  border-radius: var(--app-radius-sm);
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: var(--app-spacing-xl);
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--app-spacing-md);
+}
+
+.category-card {
+  border-radius: var(--app-radius-md);
+  box-shadow: var(--app-shadow-sm);
+}
+
+.status-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: var(--app-spacing-sm);
+}
+
+.status-ready {
+  background-color: var(--app-success-bg);
+  color: var(--app-success);
+}
+
+.status-pending {
+  background-color: var(--app-warning-bg);
+  color: var(--app-warning);
+}
+
+.status-empty {
+  background-color: var(--app-border);
+  color: var(--app-text-secondary);
+}
+
+.description-preview {
+  margin: 0;
+  color: var(--app-text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

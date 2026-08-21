@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, Subject, of } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { BehaviorSubject, Subject, EMPTY } from 'rxjs';
+import { switchMap, takeUntil, catchError } from 'rxjs/operators';
 
 import { Ticket, TicketsResponse } from '../models';
 import { TicketsApiService } from './tickets-api.service';
@@ -38,35 +38,38 @@ export class TicketsStateService implements OnDestroy {
   } | null>(null);
   public readonly pagination$ = this.paginationSubject.asObservable();
 
-  // Cleanup signal
+  /** Emits whenever a new load is requested — switchMap cancels the previous one */
+  private readonly loadTrigger$ = new Subject<{ page: number; size: number }>();
   private readonly destroy$ = new Subject<void>();
 
-  constructor(private apiService: TicketsApiService) {}
+  constructor(private apiService: TicketsApiService) {
+    // Single long-lived subscription using switchMap to cancel in-flight requests.
+    // catchError is placed INSIDE switchMap so errors from individual HTTP calls
+    // are handled without terminating the outer subscription — Retry keeps working.
+    this.loadTrigger$
+      .pipe(
+        switchMap(({ page, size }) => {
+          this.loadingSubject.next(true);
+          this.errorSubject.next(null);
+          return this.apiService.getTickets(page, size).pipe(
+            catchError((error: any) => {
+              this.handleError(error);
+              return EMPTY; // absorb the error; outer stream stays alive
+            })
+          );
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (response: TicketsResponse) => this.handleSuccess(response),
+      });
+  }
 
   /**
-   * Load tickets from the API
-   * Manages loading and error states automatically
-   *
-   * @param page - Page number (0-indexed), defaults to 0
-   * @param size - Page size, defaults to 20
+   * Load (or reload) tickets. Cancels any in-flight request automatically.
    */
   loadTickets(page: number = 0, size: number = 20): void {
-    // Set loading state
-    this.loadingSubject.next(true);
-    this.errorSubject.next(null);
-
-    // Call API service
-    this.apiService
-      .getTickets(page, size)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: TicketsResponse) => {
-          this.handleSuccess(response);
-        },
-        error: (error: any) => {
-          this.handleError(error);
-        },
-      });
+    this.loadTrigger$.next({ page, size });
   }
 
   /**
@@ -89,7 +92,7 @@ export class TicketsStateService implements OnDestroy {
    * Extracts user-friendly message and updates error state
    */
   private handleError(error: any): void {
-    const errorMessage = error?.message || 'Failed to load tickets. Please try again.';
+    const errorMessage = error?.message || 'Error al cargar los tickets. Inténtalo de nuevo.';
     this.errorSubject.next(errorMessage);
     this.loadingSubject.next(false);
   }
@@ -106,22 +109,6 @@ export class TicketsStateService implements OnDestroy {
    */
   getTicketById(id: string): Ticket | undefined {
     return this.getTickets().find((t) => t.id === id);
-  }
-
-  /**
-   * Re-query for a new ticket (placeholder for future implementation)
-   * NOTE: This feature is out of scope for the 002-consume-backend-api feature
-   *
-   * @param targetTicketId - ID of ticket to search for
-   * @param onSuccess - Callback when ticket is found
-   * @returns Observable that completes when ticket is found or timeout
-   */
-  reQueryForNewTicket(
-    targetTicketId: string,
-    onSuccess?: (ticket: Ticket) => void
-  ): Observable<Ticket | null> {
-    // TODO: Implement re-query logic for newly created tickets
-    return of(null);
   }
 
   /**
@@ -143,4 +130,3 @@ export class TicketsStateService implements OnDestroy {
     this.destroy$.complete();
   }
 }
-

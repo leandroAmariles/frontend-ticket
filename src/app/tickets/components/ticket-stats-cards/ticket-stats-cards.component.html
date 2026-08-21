@@ -1,0 +1,11 @@
+<div class="stats-grid">
+  <div class="stat-card" *ngFor="let card of cards" [ngClass]="card.colorClass">
+    <div class="stat-icon">
+      <mat-icon aria-hidden="true">{{ card.icon }}</mat-icon>
+    </div>
+    <div class="stat-body">
+      <span class="stat-value">{{ card.value ?? '—' }}</span>
+      <span class="stat-label">{{ card.label }}</span>
+    </div>
+  </div>
+</div>

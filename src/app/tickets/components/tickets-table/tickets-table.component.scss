@@ -1,6 +1,9 @@
 .tickets-table-wrapper {
   width: 100%;
   overflow: visible;
+  background-color: var(--app-surface);
+  border-radius: var(--app-radius-md);
+  box-shadow: var(--app-shadow-sm);
 }
 
 .tickets-table {
@@ -9,26 +12,27 @@
 
   th {
     font-weight: 600;
-    background-color: #f5f5f5;
+    background-color: var(--app-bg);
+    color: var(--app-text-secondary);
     padding: 12px;
     text-align: left;
-    border-bottom: 2px solid #ddd;
+    border-bottom: 2px solid var(--app-border);
   }
 
   td {
     padding: 12px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--app-border);
   }
 
   tr:hover {
-    background-color: #fafafa;
+    background-color: var(--app-bg);
   }
 }
 
 .id-cell {
   font-family: monospace;
   font-size: 12px;
-  color: #999;
+  color: var(--app-text-secondary);
 }
 
 .title-cell {
@@ -39,44 +43,79 @@
   text-overflow: ellipsis;
 }
 
-.priority-cell {
-  .priority-low {
-    color: #4caf50;
+.severity-cell {
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+    font-size: 12.5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    line-height: 1.4;
+
+    // Urgency dot before the label
+    &::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: currentColor;
+      flex-shrink: 0;
+    }
   }
 
-  .priority-medium {
-    color: #ff9800;
+  /* Baja — sin urgencia */
+  .severity-low {
+    color: #1b8a5a;
+    background-color: rgba(27, 138, 90, 0.12);
   }
 
-  .priority-high {
-    color: #f44336;
-  }
-}
-
-.status-cell {
-  .status-open {
-    color: #2196f3;
+  /* Media — atención normal */
+  .severity-medium {
+    color: #b26a00;
+    background-color: rgba(178, 106, 0, 0.14);
   }
 
-  .status-in_progress {
-    color: #ff9800;
+  /* Alta — requiere atención pronto */
+  .severity-high {
+    color: #d9480f;
+    background-color: rgba(217, 72, 15, 0.14);
   }
 
-  .status-closed {
-    color: #4caf50;
+  /* Crítica — máxima urgencia, relleno sólido para que destaque sobre el resto */
+  .severity-critical {
+    color: #ffffff;
+    background-color: #d32f2f;
+    font-weight: 700;
+
+    &::before {
+      background-color: #ffffff;
+    }
+  }
+
+  .severity-unknown,
+  .severity-none {
+    color: var(--app-text-secondary);
+    background-color: var(--app-border);
+    font-weight: 500;
+
+    &::before {
+      display: none;
+    }
   }
 }
 
 .assigned-to-cell,
 .created-at-cell {
-  color: #666;
+  color: var(--app-text-secondary);
   font-size: 14px;
 }
 
 ::ng-deep {
   .mat-paginator {
-    background-color: #fafafa;
-    border-top: 1px solid #ddd;
+    background-color: var(--app-surface);
+    border-top: 1px solid var(--app-border);
   }
 
   .mat-sort-header-button {

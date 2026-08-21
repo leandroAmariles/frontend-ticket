@@ -1,10 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { TicketsStateService } from '../../services/tickets-state.service';
 import { Ticket } from '../../models';
+import { TicketCreateDialogComponent } from '../../components/ticket-create-dialog/ticket-create-dialog.component';
 
 /**
  * Tickets List Page Component
@@ -107,7 +108,7 @@ export class TicketsListPageComponent implements OnInit, OnDestroy {
    */
   constructor(
     private ticketsState: TicketsStateService,
-    private router: Router
+    private dialog: MatDialog
   ) {}
 
   /**
@@ -253,27 +254,25 @@ export class TicketsListPageComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Navigate user to create a new ticket
-   * Called when user clicks "+ New Ticket" button
-   *
-   * **Flow**:
-   * 1. User clicks "+ New Ticket" button
-   * 2. navigateToCreate() called
-   * 3. Router.navigate(['/tickets/new']) executed
-   * 4. Browser URL changes to /tickets/new
-   * 5. TicketsNewPageComponent mounted
-   * 6. User sees create form
-   *
-   * **Why Router Over Direct Navigation**:
-   * - Router respects Angular routing guards
-   * - Can implement route animations
-   * - Can save state for undo/back button
-   * - Better for SEO and bookmarking
-   *
-   * @see Router.navigate()
+   * Open the "create ticket" dialog.
+   * Called when user clicks the "+ New Ticket" button.
+   * If the dialog closes with a truthy result (ticket was created),
+   * reloads the current page/size so the new ticket shows up.
    */
-  navigateToCreate(): void {
-    this.router.navigate(['/tickets/new']);
+  openCreateDialog(): void {
+    const dialogRef = this.dialog.open(TicketCreateDialogComponent, {
+      width: '560px',
+      autoFocus: 'first-tabbable',
+    });
+
+    dialogRef
+      .afterClosed()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((created: boolean | undefined) => {
+        if (created) {
+          this.loadTickets(this.currentPage, this.currentSize);
+        }
+      });
   }
 
   /**

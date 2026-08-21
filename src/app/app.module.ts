@@ -10,6 +10,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
@@ -33,6 +37,10 @@ import { LoginPageComponent } from './core/pages/login/login-page.component';
     MatInputModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    MatToolbarModule,
+    MatMenuModule,
+    MatIconModule,
+    MatTooltipModule,
     AppRoutingModule,
   ],
   providers: [

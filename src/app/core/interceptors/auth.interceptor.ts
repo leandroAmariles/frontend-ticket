@@ -155,17 +155,21 @@ export class AuthInterceptor implements HttpInterceptor {
     // Handle response and potential errors
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
-        // Handle 401 Unauthorized responses
-        if (error.status === 401) {
+        // Handle 401 Unauthorized responses — but NOT for the login endpoint itself
+        // (login failures should be handled by the login component, not redirected)
+        const isLoginEndpoint = request.url.includes('/api/auth/login');
+        if (error.status === 401 && !isLoginEndpoint) {
           // Clear the expired token
           this.authService.clearToken();
 
           // Display user-friendly message
           console.warn('Session expired. Please login again.');
 
-          // Redirect to login page
+          // Redirect to login page, but never with returnUrl=/login to avoid loops
+          const currentUrl = this.router.url.split('?')[0]; // strip existing query params
+          const returnUrl = currentUrl === '/login' ? '/tickets' : currentUrl;
           this.router.navigate(['/login'], {
-            queryParams: { returnUrl: this.router.url }
+            queryParams: { returnUrl }
           });
         }
 

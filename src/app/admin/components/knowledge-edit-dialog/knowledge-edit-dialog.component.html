@@ -1,0 +1,82 @@
+<h2 mat-dialog-title>Editar: {{ categoryLabel }}</h2>
+
+<mat-dialog-content class="edit-dialog-content">
+  <div *ngIf="errorMessage" class="error-message" role="alert">
+    {{ errorMessage }}
+  </div>
+
+  <form [formGroup]="form" class="edit-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Descripción *</mat-label>
+      <textarea
+        matInput
+        formControlName="description"
+        rows="4"
+        [maxlength]="limits.descriptionMaxLength"
+      ></textarea>
+      <mat-hint align="end">{{ description?.value?.length || 0 }}/{{ limits.descriptionMaxLength }}</mat-hint>
+      <mat-error *ngIf="description?.hasError('required')">La descripción es obligatoria</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width chip-field">
+      <mat-label>Ejemplos</mat-label>
+      <mat-chip-grid #exampleGrid aria-label="Ejemplos">
+        <mat-chip-row *ngFor="let ex of examples" (removed)="removeChip(examples, ex)">
+          {{ ex }}
+          <button matChipRemove type="button"><mat-icon>cancel</mat-icon></button>
+        </mat-chip-row>
+      </mat-chip-grid>
+      <input
+        placeholder="Añadir ejemplo y pulsar Enter..."
+        [matChipInputFor]="exampleGrid"
+        [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+        [matChipInputAddOnBlur]="true"
+        (matChipInputTokenEnd)="addChip(examples, limits.examplesMaxItems, limits.exampleMaxLength, $event)"
+      />
+      <mat-hint align="end">{{ examples.length }}/{{ limits.examplesMaxItems }}</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width chip-field">
+      <mat-label>Keywords</mat-label>
+      <mat-chip-grid #keywordGrid aria-label="Keywords">
+        <mat-chip-row *ngFor="let kw of keywords" (removed)="removeChip(keywords, kw)">
+          {{ kw }}
+          <button matChipRemove type="button"><mat-icon>cancel</mat-icon></button>
+        </mat-chip-row>
+      </mat-chip-grid>
+      <input
+        placeholder="Añadir keyword y pulsar Enter..."
+        [matChipInputFor]="keywordGrid"
+        [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+        [matChipInputAddOnBlur]="true"
+        (matChipInputTokenEnd)="addChip(keywords, limits.keywordsMaxItems, limits.keywordMaxLength, $event)"
+      />
+      <mat-hint align="end">{{ keywords.length }}/{{ limits.keywordsMaxItems }}</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width chip-field">
+      <mat-label>Patterns</mat-label>
+      <mat-chip-grid #patternGrid aria-label="Patterns">
+        <mat-chip-row *ngFor="let p of patterns" (removed)="removeChip(patterns, p)">
+          {{ p }}
+          <button matChipRemove type="button"><mat-icon>cancel</mat-icon></button>
+        </mat-chip-row>
+      </mat-chip-grid>
+      <input
+        placeholder="Añadir pattern y pulsar Enter..."
+        [matChipInputFor]="patternGrid"
+        [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+        [matChipInputAddOnBlur]="true"
+        (matChipInputTokenEnd)="addChip(patterns, limits.patternsMaxItems, limits.patternMaxLength, $event)"
+      />
+      <mat-hint align="end">{{ patterns.length }}/{{ limits.patternsMaxItems }}</mat-hint>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="onCancel()">Cancelar</button>
+  <button mat-raised-button color="primary" type="button" [disabled]="isSaving" (click)="onSave()">
+    {{ isSaving ? 'Guardando...' : 'Guardar' }}
+  </button>
+</mat-dialog-actions>

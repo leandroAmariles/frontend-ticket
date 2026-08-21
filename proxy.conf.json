@@ -1,0 +1,8 @@
+{
+  "/api/v1/knowledge": {
+    "target": "http://localhost:8092",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

@@ -1,0 +1,29 @@
+.edit-dialog-content {
+  width: 100%;
+
+  @media (min-width: 600px) {
+    width: 520px;
+  }
+}
+
+.error-message {
+  padding: var(--app-spacing-md);
+  margin-bottom: var(--app-spacing-md);
+  background-color: var(--app-error-bg);
+  color: var(--app-error);
+  border-radius: var(--app-radius-sm);
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-spacing-sm);
+}
+
+.full-width {
+  width: 100%;
+}
+
+.chip-field mat-chip-grid {
+  min-height: 32px;
+}

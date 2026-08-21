@@ -58,6 +58,8 @@ import { AuthService } from '../../services/auth.service';
       width: 100%;
       max-width: 400px;
       padding: 16px;
+      border-radius: var(--app-radius-md);
+      box-shadow: var(--app-shadow-md);
     }
     .login-form {
       display: flex;
@@ -73,11 +75,11 @@ import { AuthService } from '../../services/auth.service';
       height: 44px;
     }
     .error-message {
-      color: #f44336;
+      color: var(--app-error);
       font-size: 14px;
       padding: 8px;
-      background: #fdecea;
-      border-radius: 4px;
+      background: var(--app-error-bg);
+      border-radius: var(--app-radius-sm);
     }
     .inline-spinner {
       display: inline-block;
@@ -103,7 +105,9 @@ export class LoginPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/tickets';
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    // Never redirect back to /login to avoid infinite-loop after login
+    this.returnUrl = (returnUrl && returnUrl !== '/login') ? returnUrl : '/tickets';
 
     // Si ya está autenticado, redirigir directo
     if (this.authService.isTokenValid()) {
