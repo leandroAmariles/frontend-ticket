@@ -1,0 +1,82 @@
+<h2 mat-dialog-title>Crear Nuevo Ticket</h2>
+
+<mat-dialog-content class="create-dialog-content">
+  <!-- Success Message -->
+  <div *ngIf="successMessage" class="success-message" role="status" aria-live="polite">
+    {{ successMessage }}
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="error-message" role="alert">
+    <p>{{ errorMessage }}</p>
+    <button mat-button (click)="clearError()">Cerrar</button>
+  </div>
+
+  <form [formGroup]="createForm" (ngSubmit)="onSubmit()" id="create-ticket-form" class="create-form">
+    <!-- Titulo Field -->
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Título *</mat-label>
+      <input
+        matInput
+        formControlName="titulo"
+        data-testid="input-titulo"
+        placeholder="Título breve del ticket (máx. 250 caracteres)"
+        required
+      />
+      <mat-error *ngIf="titulo?.touched && titulo?.errors?.['required']">
+        El título es obligatorio
+      </mat-error>
+      <mat-error *ngIf="titulo?.touched && titulo?.errors?.['maxlength']">
+        El título no puede superar 250 caracteres
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Descripción Field -->
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Descripción *</mat-label>
+      <textarea
+        matInput
+        formControlName="descripcion"
+        data-testid="input-descripcion"
+        placeholder="Descripción detallada del problema"
+        rows="5"
+        required
+      ></textarea>
+      <mat-error *ngIf="descripcion?.touched && descripcion?.errors?.['required']">
+        La descripción es obligatoria
+      </mat-error>
+      <mat-hint align="end">{{ descripcion?.value?.length || 0 }} caracteres</mat-hint>
+    </mat-form-field>
+
+    <!-- Fecha Field -->
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Fecha *</mat-label>
+      <input
+        matInput
+        type="datetime-local"
+        formControlName="fecha"
+        data-testid="input-fecha"
+        required
+      />
+      <mat-error *ngIf="fecha?.touched && fecha?.errors?.['required']">
+        La fecha es obligatoria
+      </mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="onCancel()" data-testid="btn-cancel">
+    Cancelar
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    type="submit"
+    form="create-ticket-form"
+    [disabled]="createForm.invalid || isSubmitting"
+    data-testid="btn-submit"
+  >
+    {{ isSubmitting ? 'Enviando...' : 'Crear Ticket' }}
+  </button>
+</mat-dialog-actions>

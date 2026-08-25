@@ -1,3 +1,5 @@
 {
-  "feature_directory": "specs/001-tickets-dashboard"
+
+  "feature_directory": "specs/003-fix-page-size-selector",
+  "branch_name": "003-fix-page-size-selector"
 }

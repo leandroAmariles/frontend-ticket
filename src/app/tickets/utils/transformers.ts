@@ -5,19 +5,22 @@ import { Ticket, CreateTicketPayload } from '../models';
  * Currently a pass-through as API format matches UI format
  */
 export function mapApiTicketToUi(apiTicket: Ticket): Ticket {
-  return {
-    ...apiTicket,
-  };
+  return { ...apiTicket };
 }
 
 /**
  * Maps create form data to API payload
+ * Backend expects: fecha (ISO-8601), titulo, descripcion
+ * If fecha is not provided, defaults to current UTC time
  */
 export function mapCreateFormToApi(formData: any): CreateTicketPayload {
+  const fecha = formData.fecha
+    ? new Date(formData.fecha).toISOString()
+    : new Date().toISOString();
   return {
+    fecha,
     titulo: formData.titulo,
     descripcion: formData.descripcion,
-    status: formData.status || 'PENDING',
   };
 }
 

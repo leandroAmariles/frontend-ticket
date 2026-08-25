@@ -1,44 +1,46 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from './core/services/auth.service';
+import { ThemeService, AppTheme } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
-  template: `
-    <div class="app-container">
-      <header class="app-header">
-        <h1>Support Tickets</h1>
-      </header>
-      <main class="app-main">
-        <router-outlet></router-outlet>
-      </main>
-    </div>
-  `,
-  styles: [`
-    .app-container {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      background-color: #f5f5f5;
-    }
-
-    .app-header {
-      background-color: #1976d2;
-      color: white;
-      padding: 16px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-
-      h1 {
-        margin: 0;
-        font-size: 24px;
-      }
-    }
-
-    .app-main {
-      flex: 1;
-      padding: 16px;
-    }
-  `]
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
   title = 'Tickets Dashboard';
-}
 
+  theme$ = this.themeService.theme$;
+
+  constructor(
+    private authService: AuthService,
+    private themeService: ThemeService,
+    private router: Router
+  ) {}
+
+  get isAuthenticated(): boolean {
+    return this.authService.isTokenValid();
+  }
+
+  get isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
+  get username(): string | null {
+    return this.authService.getUsername();
+  }
+
+  isDark(theme: AppTheme | null): boolean {
+    return theme === 'dark';
+  }
+
+  toggleTheme(): void {
+    this.themeService.toggle();
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+}

@@ -1,17 +1,18 @@
 /**
- * Ticket entity interface
- * Represents a support ticket in the backend system
- * Mapped to actual backend fields: id, titulo, descripcion, status, creatorId, fecha, createdAt, updatedAt
+ * Ticket entity interface — matches actual backend response from GET /api/v1/tickets/all
  */
 export interface Ticket {
-  id: string; // UUID v4
-  titulo: string; // Backend field name (Spanish: title)
-  descripcion: string; // Backend field name (Spanish: description)
-  status: 'PENDING' | 'CREATED'; // Backend ticket status values
-  creatorId: string; // UUID v4 of ticket creator
-  fecha: string; // Ticket date field
-  createdAt: string; // ISO 8601 UTC format - Creation timestamp
-  updatedAt: string; // ISO 8601 UTC format - Last update timestamp
+  id: string;               // UUID v4
+  titulo: string;
+  descripcion: string;
+  status: 'PENDING' | 'CREATED';
+  creatorId: string | null; // nullable in backend
+  ticketType?: string;      // e.g. "TAREA", "INCIDENCIA"
+  severity?: string;        // e.g. "low", "medium", "high"
+  priority?: string;
+  fecha: string;            // ISO-8601
+  createdAt: string;        // ISO 8601 UTC
+  updatedAt?: string;       // ISO 8601 UTC
 }
 
 /**
@@ -39,14 +40,15 @@ export interface TicketsResponse {
  * GET /api/v1/tickets/all API request parameters
  */
 export interface TicketsListParams {
-  page?: number; // Default: 0
-  size?: number; // Default: 20
-  sort?: string; // Optional sorting
+  page?: number;
+  size?: number;
+  status?: string;
+  createdAfter?: string;
+  createdBefore?: string;
 }
 
 /**
  * User entity interface
- * Represents a system user who can create and manage tickets
  */
 export interface User {
   id: string;
@@ -55,21 +57,27 @@ export interface User {
 }
 
 /**
- * Post /tickets API request payload
+ * POST /api/tickets API request payload
  */
 export interface CreateTicketPayload {
-  titulo: string;
-  descripcion: string;
-  status: 'PENDING' | 'CREATED';
+  fecha: string;       // ISO-8601 with timezone
+  titulo: string;      // 1–250 characters
+  descripcion: string; // 1+ characters
 }
 
 /**
- * Re-query configuration for tracking newly created tickets
+ * POST /api/tickets API response (202 ACCEPTED)
  */
-export interface ReQueryConfig {
-  initialInterval: number; // milliseconds
-  maxInterval: number; // milliseconds
-  maxDuration: number; // milliseconds
-  backoffMultiplier?: number;
+export interface CreateTicketResponse {
+  messageId: string;
+  status: string;
+  timestamp: number;
 }
 
+// Pagination models (Feature 003: fix-page-size-selector)
+export {
+  PaginationState,
+  PageSizeChangeEvent,
+  PaginationError,
+  TicketsListStateExtended,
+} from './pagination.model';

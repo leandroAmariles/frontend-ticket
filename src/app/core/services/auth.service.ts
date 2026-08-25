@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { AuthToken, LoginResponse, LoginRequest } from '../models';
+import { decodeJwtPayload } from '../utils/jwt.util';
 
 /**
  * Authentication Service
@@ -121,18 +122,34 @@ export class AuthService {
   login(username: string, password: string): Observable<AuthToken> {
     const loginRequest: LoginRequest = { username, password };
     return this.http
-      .post<LoginResponse>(`${this.API_BASE_URL}${this.LOGIN_ENDPOINT}`, loginRequest)
+      .post<any>(`${this.API_BASE_URL}${this.LOGIN_ENDPOINT}`, loginRequest)
       .pipe(
-        tap((response: LoginResponse) => {
-          const authToken: AuthToken = {
-            accessToken: response.accessToken,
+        map((response): AuthToken => {
+          // Support both 'accessToken' and 'token' field names from backend
+          const rawToken = response.accessToken || response.token;
+          console.debug('[AuthService] Login response fields:', {
+            hasAccessToken: !!response.accessToken,
+            hasToken: !!response.token,
             tokenType: response.tokenType,
             expiresIn: response.expiresIn,
+            username: response.username,
+            issuedAt: response.issuedAt,
+          });
+
+          if (!rawToken) {
+            throw new Error('[AuthService] Backend response missing both "accessToken" and "token" fields');
+          }
+
+          const authToken: AuthToken = {
+            accessToken: rawToken,
+            tokenType: response.tokenType || 'Bearer',
+            expiresIn: response.expiresIn || 3600,
             username: response.username,
             issuedAt: this.getIssuedAtTimestamp(response.issuedAt),
           };
           this.setToken(authToken);
           this.isAuthenticatedSubject.next(true);
+          return authToken;
         })
       );
   }
@@ -166,9 +183,55 @@ export class AuthService {
       if (!tokenData) return null;
 
       const authToken: AuthToken = JSON.parse(tokenData);
+
+      // Defensive check: if accessToken is missing the stored data is corrupt
+      // (e.g. saved by an older version of the frontend that had a field-name bug).
+      // Clear it so the user is redirected to login with a clean state.
+      if (!authToken.accessToken) {
+        console.warn('[AuthService] Stored token has no accessToken — clearing corrupt localStorage entry');
+        this.logout();
+        return null;
+      }
+
       return authToken.accessToken;
     } catch (error) {
       console.error('Error retrieving token:', error);
+      this.logout();
+      return null;
+    }
+  }
+
+  /**
+   * Get the role claim ("role": "ADMIN" | "SUPPORT" | "USER") embedded in the JWT.
+   * The role is never returned by the login response — it only exists inside the
+   * token itself, so it is decoded client-side rather than stored separately.
+   *
+   * @returns The role string, or null if there is no valid token / no role claim
+   */
+  getRole(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+    const payload = decodeJwtPayload<{ role?: string }>(token);
+    return payload?.role ?? null;
+  }
+
+  /**
+   * Whether the currently logged-in user has the ADMIN role
+   */
+  isAdmin(): boolean {
+    return this.getRole() === 'ADMIN';
+  }
+
+  /**
+   * Get the username of the currently logged-in user (from stored token data)
+   */
+  getUsername(): string | null {
+    try {
+      const tokenData = localStorage.getItem(this.TOKEN_KEY);
+      if (!tokenData) return null;
+      const authToken: AuthToken = JSON.parse(tokenData);
+      return authToken.username ?? null;
+    } catch {
       return null;
     }
   }
@@ -217,9 +280,10 @@ export class AuthService {
 
       const expirationTime = parseInt(expirationTimeStr, 10);
       const currentTime = Date.now();
-      const buffer = 60 * 1000; // 60 second buffer for clock skew
-
-      return currentTime < expirationTime - buffer;
+      // No buffer: respect the exact expiration time the backend issued.
+      // A 60-second buffer was causing the frontend to drop valid tokens early
+      // and make un-authenticated requests that returned 401.
+      return currentTime < expirationTime;
     } catch (error) {
       console.error('Error validating token:', error);
       return false;

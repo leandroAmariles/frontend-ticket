@@ -147,15 +147,17 @@ describe('TicketsListPage - Integration Tests', () => {
   });
 
   describe('Navigation', () => {
-    it('should navigate to create page on New Ticket click', () => {
+    it('should open the create-ticket dialog on New Ticket click', () => {
       fixture.detectChanges();
 
-      const router = TestBed.inject(require('@angular/router').Router) as any;
-      jest.spyOn(router, 'navigate');
+      const dialog = TestBed.inject(require('@angular/material/dialog').MatDialog) as any;
+      const afterClosedSpy = jest.spyOn(dialog, 'open').mockReturnValue({
+        afterClosed: () => of(false),
+      } as any);
 
-      component.navigateToCreate();
+      component.openCreateDialog();
 
-      expect(router.navigate).toHaveBeenCalledWith(['/tickets/new']);
+      expect(afterClosedSpy).toHaveBeenCalled();
     });
   });
 

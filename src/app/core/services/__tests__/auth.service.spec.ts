@@ -53,7 +53,7 @@ describe('AuthService', () => {
 
     it('should store token in localStorage on successful login', (done) => {
       const loginResponse: LoginResponse = {
-        accessToken: 'jwt-token-abc123',
+        token: 'jwt-token-abc123',
         tokenType: 'Bearer',
         expiresIn: 3600,
         username: 'testuser',
