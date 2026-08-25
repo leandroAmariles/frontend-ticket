@@ -49,7 +49,7 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@0.24.0
+      - uses: aquasecurity/trivy-action@v0.28.0
         with:
           scan-type: fs
           scan-ref: .
@@ -79,7 +79,7 @@ jobs:
             ${{ env.IMAGE }}:${{ github.sha }}
             ${{ env.IMAGE }}:latest
       - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           image-ref: ${{ env.IMAGE }}:${{ github.sha }}
           severity: HIGH,CRITICAL
@@ -107,7 +107,7 @@ jobs:
           push: true
           tags: ${{ env.IMAGE }}:${{ github.ref_name }}
       - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           image-ref: ${{ env.IMAGE }}:${{ github.ref_name }}
           severity: HIGH,CRITICAL
