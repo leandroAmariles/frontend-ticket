@@ -4,6 +4,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthToken, LoginRequest } from '../models';
 import { decodeJwtPayload } from '../utils/jwt.util';
+import { environment } from '../../../environments/environment';
 
 /**
  * Authentication Service
@@ -101,7 +102,7 @@ import { decodeJwtPayload } from '../utils/jwt.util';
 export class AuthService {
   private readonly TOKEN_KEY = 'auth_token';
   private readonly TOKEN_EXPIRATION_KEY = 'auth_token_expiration';
-  private readonly API_BASE_URL = 'http://localhost:8080';
+  private readonly API_BASE_URL = environment.apiBaseUrl;
   private readonly LOGIN_ENDPOINT = '/api/auth/login';
 
   // Observable to track authentication state changes

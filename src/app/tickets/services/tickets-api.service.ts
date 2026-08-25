@@ -9,6 +9,7 @@ import {
 } from '../models';
 import { ErrorHandlerService } from '../../core/services/error-handler.service';
 import { validateTicketsArray, formatValidationErrors } from '../utils/ticket-validators';
+import { environment } from '../../../environments/environment';
 
 /**
  * Tickets API Service
@@ -78,7 +79,7 @@ import { validateTicketsArray, formatValidationErrors } from '../utils/ticket-va
   providedIn: 'root',
 })
 export class TicketsApiService {
-  private readonly API_BASE_URL = 'http://localhost:8080';
+  private readonly API_BASE_URL = environment.apiBaseUrl;
   private readonly TICKETS_ALL_ENDPOINT = '/api/v1/tickets/all';
   private readonly TICKETS_ENDPOINT = '/api/v1/tickets';
   private readonly CREATE_TICKET_ENDPOINT = '/api/tickets';

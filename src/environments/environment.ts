@@ -3,7 +3,10 @@
  */
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://localhost:8090/api',
+  // Matches the hardcoded base URL TicketsApiService/AuthService used before
+  // they read from environment — backend-ticket run locally (docker-compose)
+  // on 8080.
+  apiBaseUrl: 'http://localhost:8080',
   // Relative path — proxied to backend-ia (http://localhost:8092) by proxy.conf.json
   // during `ng serve`, since backend-ia has no CORS configuration of its own.
   knowledgeApiBaseUrl: '/api/v1/knowledge',
