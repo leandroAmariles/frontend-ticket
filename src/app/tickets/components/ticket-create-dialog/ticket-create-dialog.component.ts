@@ -16,9 +16,10 @@ import { mapCreateFormToApi } from '../../utils/transformers';
  * initial status is PENDING.
  */
 @Component({
-  selector: 'app-ticket-create-dialog',
-  templateUrl: './ticket-create-dialog.component.html',
-  styleUrls: ['./ticket-create-dialog.component.scss'],
+    selector: 'app-ticket-create-dialog',
+    templateUrl: './ticket-create-dialog.component.html',
+    styleUrls: ['./ticket-create-dialog.component.scss'],
+    standalone: false
 })
 export class TicketCreateDialogComponent implements OnDestroy {
   createForm: FormGroup;

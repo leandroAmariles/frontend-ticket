@@ -44,9 +44,10 @@ import { TicketCreateDialogComponent } from '../../components/ticket-create-dial
  * @component
  */
 @Component({
-  selector: 'app-tickets-list-page',
-  templateUrl: './tickets-list-page.component.html',
-  styleUrls: ['./tickets-list-page.component.scss'],
+    selector: 'app-tickets-list-page',
+    templateUrl: './tickets-list-page.component.html',
+    styleUrls: ['./tickets-list-page.component.scss'],
+    standalone: false
 })
 export class TicketsListPageComponent implements OnInit, OnDestroy {
   /**

@@ -20,9 +20,10 @@ export interface KnowledgeEditDialogData {
 }
 
 @Component({
-  selector: 'app-knowledge-edit-dialog',
-  templateUrl: './knowledge-edit-dialog.component.html',
-  styleUrls: ['./knowledge-edit-dialog.component.scss'],
+    selector: 'app-knowledge-edit-dialog',
+    templateUrl: './knowledge-edit-dialog.component.html',
+    styleUrls: ['./knowledge-edit-dialog.component.scss'],
+    standalone: false
 })
 export class KnowledgeEditDialogComponent implements OnDestroy {
   readonly separatorKeysCodes = [ENTER, COMMA];

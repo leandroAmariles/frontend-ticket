@@ -12,9 +12,10 @@ interface StatCard {
 }
 
 @Component({
-  selector: 'app-ticket-stats-cards',
-  templateUrl: './ticket-stats-cards.component.html',
-  styleUrls: ['./ticket-stats-cards.component.scss'],
+    selector: 'app-ticket-stats-cards',
+    templateUrl: './ticket-stats-cards.component.html',
+    styleUrls: ['./ticket-stats-cards.component.scss'],
+    standalone: false
 })
 export class TicketStatsCardsComponent implements OnInit, OnDestroy {
   cards: StatCard[] = [

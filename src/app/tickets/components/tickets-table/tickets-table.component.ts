@@ -19,9 +19,10 @@ const SEVERITY_RANK: Record<'low' | 'medium' | 'high' | 'critical' | 'unknown', 
  * Uses Angular Material table for accessibility and responsive design
  */
 @Component({
-  selector: 'app-tickets-table',
-  templateUrl: './tickets-table.component.html',
-  styleUrls: ['./tickets-table.component.scss'],
+    selector: 'app-tickets-table',
+    templateUrl: './tickets-table.component.html',
+    styleUrls: ['./tickets-table.component.scss'],
+    standalone: false
 })
 export class TicketsTableComponent implements OnInit, OnChanges {
   @Input() tickets: Ticket[] = [];

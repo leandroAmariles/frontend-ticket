@@ -1,9 +1,10 @@
 import { Component, Input } from '@angular/core';
 
 @Component({
-  selector: 'app-error-state',
-  templateUrl: './error-state.component.html',
-  styleUrls: ['./error-state.component.scss'],
+    selector: 'app-error-state',
+    templateUrl: './error-state.component.html',
+    styleUrls: ['./error-state.component.scss'],
+    standalone: false
 })
 export class ErrorStateComponent {
   @Input() message: string | null = 'An error occurred while loading tickets.';

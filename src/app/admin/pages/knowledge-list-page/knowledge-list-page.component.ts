@@ -18,9 +18,10 @@ interface CategorySlot {
 }
 
 @Component({
-  selector: 'app-knowledge-list-page',
-  templateUrl: './knowledge-list-page.component.html',
-  styleUrls: ['./knowledge-list-page.component.scss'],
+    selector: 'app-knowledge-list-page',
+    templateUrl: './knowledge-list-page.component.html',
+    styleUrls: ['./knowledge-list-page.component.scss'],
+    standalone: false
 })
 export class KnowledgeListPageComponent implements OnInit {
   slots: CategorySlot[] = [];
