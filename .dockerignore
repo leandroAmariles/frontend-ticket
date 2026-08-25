@@ -1,0 +1,11 @@
+node_modules
+.git
+.angular
+.idea
+.vscode
+dist
+coverage
+cypress
+e2e
+*.md
+test-output.txt

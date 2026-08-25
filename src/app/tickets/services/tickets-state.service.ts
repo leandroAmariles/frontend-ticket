@@ -50,7 +50,7 @@ export class TicketsStateService implements OnDestroy {
    * @param page - Page number (0-indexed), defaults to 0
    * @param size - Page size, defaults to 20
    */
-  loadTickets(page: number = 0, size: number = 20): void {
+  loadTickets(page = 0, size = 20): void {
     // Set loading state
     this.loadingSubject.next(true);
     this.errorSubject.next(null);

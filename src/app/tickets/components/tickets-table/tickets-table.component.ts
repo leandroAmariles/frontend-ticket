@@ -16,8 +16,8 @@ import { Ticket } from '../../models';
 export class TicketsTableComponent implements OnInit {
   @Input() tickets: Ticket[] = [];
   @Input() pagination: { page: number; size: number; total: number; totalPages: number } | null = null;
-  @Input() isLoading: boolean = false;
-  @Input() dataTestId: string = 'tickets-table';
+  @Input() isLoading = false;
+  @Input() dataTestId = 'tickets-table';
 
   @Output() pageChange = new EventEmitter<PageEvent>();
 
@@ -31,8 +31,6 @@ export class TicketsTableComponent implements OnInit {
 
   pageSizeOptions = [10, 20, 50];
   currentPageSize = 20;
-
-  constructor() {}
 
   ngOnInit(): void {
     if (this.pagination) {
@@ -82,7 +80,7 @@ export class TicketsTableComponent implements OnInit {
   /**
    * Truncate title for display
    */
-  truncateTitle(title: string, maxLength: number = 40): string {
+  truncateTitle(title: string, maxLength = 40): string {
     return title.length > maxLength ? title.substring(0, maxLength) + '...' : title;
   }
 

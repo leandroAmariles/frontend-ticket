@@ -99,7 +99,7 @@ export class TicketsApiService {
    * @returns Observable<TicketsResponse> containing paginated tickets
    * @throws HttpErrorResponse if the request fails
    */
-  getTickets(page: number = 0, size: number = 20): Observable<TicketsResponse> {
+  getTickets(page = 0, size = 20): Observable<TicketsResponse> {
     let httpParams = new HttpParams();
     httpParams = httpParams.set('page', page.toString());
     httpParams = httpParams.set('size', size.toString());

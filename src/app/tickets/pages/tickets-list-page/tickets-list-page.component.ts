@@ -183,7 +183,7 @@ export class TicketsListPageComponent implements OnInit, OnDestroy {
    *
    * @see TicketsStateService.loadTickets()
    */
-  loadTickets(page: number = 0, size: number = 20): void {
+  loadTickets(page = 0, size = 20): void {
     this.currentPage = page;
     this.currentSize = size;
     this.ticketsState.loadTickets(page, size);

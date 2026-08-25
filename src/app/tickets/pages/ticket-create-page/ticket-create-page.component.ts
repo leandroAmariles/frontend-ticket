@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -20,7 +20,7 @@ import { Ticket } from '../../models';
   templateUrl: './ticket-create-page.component.html',
   styleUrls: ['./ticket-create-page.component.scss'],
 })
-export class TicketCreatePageComponent implements OnInit, OnDestroy {
+export class TicketCreatePageComponent implements OnDestroy {
   createForm!: FormGroup;
   isSubmitting = false;
   errorMessage: string | null = null;
@@ -41,10 +41,6 @@ export class TicketCreatePageComponent implements OnInit, OnDestroy {
     private router: Router
   ) {
     this.initializeForm();
-  }
-
-  ngOnInit(): void {
-    // Form is already initialized in constructor
   }
 
   ngOnDestroy(): void {

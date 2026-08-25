@@ -45,7 +45,7 @@
   </div>
 
   <!-- Tickets table (shown only when not loading and no error) -->
-  <div *ngIf="(loading$ | async) === false && !(error$ | async)" class="table-container">
+  <div *ngIf="(loading$ | async) === false && (error$ | async) === null" class="table-container">
     <!-- Empty state -->
     <div *ngIf="(tickets$ | async)?.length === 0" class="empty-state">
       <p>No tickets found.</p>

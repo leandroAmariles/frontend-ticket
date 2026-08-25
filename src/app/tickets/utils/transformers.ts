@@ -40,7 +40,7 @@ export function getStatusLabel(status: string): string {
  * Format date for display in UI
  * Assumes ISO 8601 UTC format from API
  */
-export function formatDateForDisplay(dateString: string, locale: string = 'es-ES'): string {
+export function formatDateForDisplay(dateString: string, locale = 'es-ES'): string {
   try {
     const date = new Date(dateString);
     // If date is invalid, return original input
@@ -63,7 +63,7 @@ export function formatDateForDisplay(dateString: string, locale: string = 'es-ES
 /**
  * Truncate long text and provide tooltip-friendly version
  */
-export function truncateText(text: string, maxLength: number = 50): string {
+export function truncateText(text: string, maxLength = 50): string {
   if (text.length <= maxLength) {
     return text;
   }

@@ -15,8 +15,6 @@ export class ErrorHandlerService {
   private errorSubject = new BehaviorSubject<ErrorMessage | null>(null);
   public error$: Observable<ErrorMessage | null> = this.errorSubject.asObservable();
 
-  constructor() {}
-
   /**
    * Handle and log an error
    */
