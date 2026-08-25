@@ -5,6 +5,7 @@ module.exports = {
     '<rootDir>/node_modules/',
     '<rootDir>/dist/',
     '<rootDir>/e2e/',
+    '<rootDir>/cypress/',
     '<rootDir>/src/test.ts',
     'setup.test.ts',
   ],
