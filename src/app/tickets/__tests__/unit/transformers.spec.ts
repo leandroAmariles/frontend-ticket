@@ -1,114 +1,83 @@
 import {
   mapApiTicketToUi,
   mapCreateFormToApi,
-  getPriorityLabel,
   getStatusLabel,
   formatDateForDisplay,
   truncateText,
 } from '../../utils/transformers';
-import { Ticket, CreateTicketPayload } from '../../models';
+import { Ticket } from '../../models';
 
 describe('Transformers', () => {
   describe('mapApiTicketToUi', () => {
-    it('should map API ticket to UI format', () => {
+    it('should map API ticket to UI format, preserving all fields', () => {
       const apiTicket: Ticket = {
         id: '123',
-        title: 'Test Ticket',
-        description: 'Test Description',
-        priority: 'high',
-        status: 'open',
-        assigned_to_id: 'user-123',
-        assigned_to_name: 'John Doe',
-        created_at: '2026-04-25T10:15:30Z',
+        titulo: 'Test Ticket',
+        descripcion: 'Test Description',
+        status: 'PENDING',
+        creatorId: 'user-123',
+        fecha: '2026-04-25T10:15:30Z',
+        createdAt: '2026-04-25T10:15:30Z',
       };
 
       const uiTicket = mapApiTicketToUi(apiTicket);
 
-      expect(uiTicket.id).toBe('123');
-      expect(uiTicket.title).toBe('Test Ticket');
-      expect(uiTicket.assigned_to_name).toBe('John Doe');
+      expect(uiTicket).toEqual(apiTicket);
+      expect(uiTicket).not.toBe(apiTicket); // returns a copy, not the same reference
     });
 
-    it('should set assigned_to_name to Unassigned when null', () => {
+    it('should preserve a null creatorId (unassigned ticket)', () => {
       const apiTicket: Ticket = {
         id: '123',
-        title: 'Test Ticket',
-        description: 'Test Description',
-        priority: 'high',
-        status: 'open',
-        assigned_to_id: null,
-        assigned_to_name: null,
-        created_at: '2026-04-25T10:15:30Z',
+        titulo: 'Test Ticket',
+        descripcion: 'Test Description',
+        status: 'PENDING',
+        creatorId: null,
+        fecha: '2026-04-25T10:15:30Z',
+        createdAt: '2026-04-25T10:15:30Z',
       };
 
       const uiTicket = mapApiTicketToUi(apiTicket);
 
-      expect(uiTicket.assigned_to_name).toBe('Unassigned');
+      expect(uiTicket.creatorId).toBeNull();
     });
   });
 
   describe('mapCreateFormToApi', () => {
-    it('should map form data to API payload', () => {
+    it('should map form data to the CreateTicketPayload API shape', () => {
       const formData = {
-        title: 'New Ticket',
-        description: 'Description',
-        priority: 'medium',
-        status: 'open',
-        assigned_to_id: 'user-123',
-        assigned_to_name: 'Jane Doe',
+        titulo: 'New Ticket',
+        descripcion: 'Description',
+        fecha: '2026-04-25T10:15:30Z',
       };
 
       const payload = mapCreateFormToApi(formData);
 
-      expect(payload.title).toBe('New Ticket');
-      expect(payload.description).toBe('Description');
-      expect(payload.priority).toBe('medium');
-      expect(payload.assigned_to_id).toBe('user-123');
+      expect(payload.titulo).toBe('New Ticket');
+      expect(payload.descripcion).toBe('Description');
+      expect(payload.fecha).toBe(new Date(formData.fecha).toISOString());
     });
 
-    it('should set status to open by default', () => {
+    it('should default fecha to the current UTC time when not provided', () => {
+      const before = Date.now();
       const formData = {
-        title: 'New Ticket',
-        description: 'Description',
-        priority: 'low',
+        titulo: 'New Ticket',
+        descripcion: 'Description',
       };
 
       const payload = mapCreateFormToApi(formData);
+      const after = Date.now();
 
-      expect(payload.status).toBe('open');
-    });
-
-    it('should handle missing assigned_to fields', () => {
-      const formData = {
-        title: 'New Ticket',
-        description: 'Description',
-        priority: 'high',
-      };
-
-      const payload = mapCreateFormToApi(formData);
-
-      expect(payload.assigned_to_id).toBeNull();
-      expect(payload.assigned_to_name).toBeNull();
-    });
-  });
-
-  describe('Priority labels', () => {
-    it('should return localized priority labels', () => {
-      expect(getPriorityLabel('low')).toBe('Baja');
-      expect(getPriorityLabel('medium')).toBe('Media');
-      expect(getPriorityLabel('high')).toBe('Alta');
-    });
-
-    it('should return original value if label not found', () => {
-      expect(getPriorityLabel('unknown')).toBe('unknown');
+      const fechaMs = new Date(payload.fecha).getTime();
+      expect(fechaMs).toBeGreaterThanOrEqual(before);
+      expect(fechaMs).toBeLessThanOrEqual(after);
     });
   });
 
   describe('Status labels', () => {
     it('should return localized status labels', () => {
-      expect(getStatusLabel('open')).toBe('Abierto');
-      expect(getStatusLabel('in_progress')).toBe('En progreso');
-      expect(getStatusLabel('closed')).toBe('Cerrado');
+      expect(getStatusLabel('PENDING')).toBe('Pendiente');
+      expect(getStatusLabel('CREATED')).toBe('Creado');
     });
 
     it('should return original value if label not found', () => {
@@ -159,4 +128,3 @@ describe('Transformers', () => {
     });
   });
 });
-

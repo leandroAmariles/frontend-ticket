@@ -75,20 +75,21 @@ describe('TicketsStateService - Page Size Change (T010, T014)', () => {
       });
     });
 
-    it('should set isLoading to true when page size changes', (done) => {
+    it('should set isLoading to true when page size changes', () => {
       // Arrange
       (apiService.getTickets as jest.Mock).mockReturnValue(of(mockTicketsResponse));
+      const emittedValues: boolean[] = [];
+      // Subscribe BEFORE triggering the change: with a synchronous mock API
+      // response, the whole loading:true -> loading:false cycle completes
+      // inside updatePageSize() itself, so a subscribe() called afterwards
+      // would only ever observe the final (false) value.
+      service.loading$.subscribe((isLoading) => emittedValues.push(isLoading));
 
       // Act
       service.updatePageSize(20);
 
       // Assert
-      service.loading$.subscribe((isLoading) => {
-        if (isLoading) {
-          expect(isLoading).toBe(true);
-          done();
-        }
-      });
+      expect(emittedValues).toContain(true);
     });
 
     it('should emit state with attemptedPageSize immediately (optimistic update)', (done) => {

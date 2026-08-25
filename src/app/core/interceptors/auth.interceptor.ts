@@ -159,8 +159,14 @@ export class AuthInterceptor implements HttpInterceptor {
         // (login failures should be handled by the login component, not redirected)
         const isLoginEndpoint = request.url.includes('/api/auth/login');
         if (error.status === 401 && !isLoginEndpoint) {
-          // Clear the expired token
-          this.authService.clearToken();
+          // Clear the expired token — guarded so a storage failure here
+          // (e.g. localStorage throwing) never replaces the original 401
+          // with a different error in the stream the caller observes.
+          try {
+            this.authService.clearToken();
+          } catch (clearError) {
+            console.error('Error clearing token after 401:', clearError);
+          }
 
           // Display user-friendly message
           console.warn('Session expired. Please login again.');

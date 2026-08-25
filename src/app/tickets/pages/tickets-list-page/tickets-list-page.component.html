@@ -55,7 +55,9 @@
         [tickets]="(tickets$ | async) ?? []"
         [pagination]="pagination"
         [isLoading]="(loading$ | async) ?? false"
+        [attemptedPageSize]="(attemptedPageSize$ | async)"
         (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
         (createTicket)="openCreateDialog()"
         [dataTestId]="'tickets-table'"
       ></app-tickets-table>

@@ -79,6 +79,14 @@ export class TicketsListPageComponent implements OnInit, OnDestroy {
   pagination$ = this.ticketsState.pagination$;
 
   /**
+   * Page size the user picked but whose request is still in flight
+   * (feature 003-fix-page-size-selector, US2). Bound into the table's
+   * paginator so the selector shows the new value immediately instead of
+   * waiting for pagination$ to update.
+   */
+  attemptedPageSize$ = this.ticketsState.attemptedPageSize$;
+
+  /**
    * RxJS Subject used for cleanup pattern
    * When ngOnDestroy is called, next() emits and all takeUntil() unsubscribe
    * This prevents memory leaks from lingering subscriptions
@@ -251,6 +259,20 @@ export class TicketsListPageComponent implements OnInit, OnDestroy {
    */
   onPageChange(event: any): void {
     this.loadTickets(event.pageIndex, event.pageSize);
+  }
+
+  /**
+   * Handle a page SIZE change from the table's paginator (feature
+   * 003-fix-page-size-selector). Distinct from onPageChange(): this always
+   * resets to page 0 and goes through TicketsStateService.updatePageSize(),
+   * which also does the optimistic "attemptedPageSize" update so the
+   * selector shows the new value immediately instead of waiting for the API.
+   *
+   * @param event - object with the new pageSize (MatPaginator's PageEvent
+   *                shape works here too, only .pageSize is used)
+   */
+  onPageSizeChange(event: { pageSize: number }): void {
+    this.ticketsState.updatePageSize(event.pageSize);
   }
 
   /**

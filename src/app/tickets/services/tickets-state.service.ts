@@ -38,6 +38,18 @@ export class TicketsStateService implements OnDestroy {
   } | null>(null);
   public readonly pagination$ = this.paginationSubject.asObservable();
 
+  /**
+   * Page size the user selected but whose API request is still in flight
+   * (feature 003-fix-page-size-selector, US2). Lets the selector show the
+   * user's choice immediately instead of snapping back until the response
+   * arrives. Cleared on success; kept on error so the failed attempt stays
+   * visible alongside the error message.
+   */
+  private readonly attemptedPageSizeSubject = new BehaviorSubject<number | undefined>(undefined);
+  public readonly attemptedPageSize$ = this.attemptedPageSizeSubject.asObservable();
+
+  private static readonly VALID_PAGE_SIZES = [10, 20, 50];
+
   /** Emits whenever a new load is requested — switchMap cancels the previous one */
   private readonly loadTrigger$ = new Subject<{ page: number; size: number }>();
   private readonly destroy$ = new Subject<void>();
@@ -73,6 +85,32 @@ export class TicketsStateService implements OnDestroy {
   }
 
   /**
+   * Change the page size (feature 003-fix-page-size-selector).
+   *
+   * - US1: always requests page 0 with the new size — the current page index
+   *   is never valid for a different size, so it's reset rather than kept.
+   * - US2: sets attemptedPageSize immediately (optimistic update) so the
+   *   selector can show the user's choice before the API responds; cleared
+   *   on success, kept on error (see handleSuccess/handleError).
+   * - Invalid sizes (must be one of [10, 20, 50]) default to 20 rather than
+   *   being silently rejected, so the UI never gets stuck showing a size
+   *   that isn't one of the selectable options.
+   */
+  updatePageSize(newSize: number): void {
+    const validSize = TicketsStateService.VALID_PAGE_SIZES.includes(newSize) ? newSize : 20;
+    this.attemptedPageSizeSubject.next(validSize);
+    this.loadTickets(0, validSize);
+  }
+
+  /**
+   * Get the current pagination snapshot (page, size, total, totalPages), or
+   * null if no page has loaded yet.
+   */
+  getPagination(): { page: number; size: number; total: number; totalPages: number } | null {
+    return this.paginationSubject.value;
+  }
+
+  /**
    * Handle successful API response
    * Updates tickets and pagination state
    */
@@ -85,6 +123,7 @@ export class TicketsStateService implements OnDestroy {
       totalPages: response.totalPages,
     });
     this.loadingSubject.next(false);
+    this.attemptedPageSizeSubject.next(undefined);
   }
 
   /**
@@ -95,6 +134,8 @@ export class TicketsStateService implements OnDestroy {
     const errorMessage = error?.message || 'Error al cargar los tickets. Inténtalo de nuevo.';
     this.errorSubject.next(errorMessage);
     this.loadingSubject.next(false);
+    // attemptedPageSize is deliberately NOT cleared here: the selector should
+    // keep showing what the user picked, alongside the error, per US2.
   }
 
   /**
@@ -119,6 +160,7 @@ export class TicketsStateService implements OnDestroy {
     this.paginationSubject.next(null);
     this.loadingSubject.next(false);
     this.errorSubject.next(null);
+    this.attemptedPageSizeSubject.next(undefined);
   }
 
   /**

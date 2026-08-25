@@ -9,18 +9,17 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { AuthService } from '../../core/services/auth.service';
-import { AuthInterceptor } from '../../core/interceptors/auth.interceptor';
-import { TicketsApiService } from '../../tickets/services/tickets-api.service';
-import { ErrorHandlerService } from '../../core/services/error-handler.service';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
+import { AuthInterceptor } from '../../../core/interceptors/auth.interceptor';
+import { TicketsApiService } from '../../services/tickets-api.service';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 describe('Auth → Tickets Flow Integration (T042)', () => {
   let authService: AuthService;
   let ticketsApiService: TicketsApiService;
-  let errorHandlerService: ErrorHandlerService;
   let httpMock: HttpTestingController;
-  let httpClient: HttpClient;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -29,15 +28,13 @@ describe('Auth → Tickets Flow Integration (T042)', () => {
         AuthService,
         TicketsApiService,
         ErrorHandlerService,
-        AuthInterceptor,
+        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
       ],
     });
 
     authService = TestBed.inject(AuthService);
     ticketsApiService = TestBed.inject(TicketsApiService);
-    errorHandlerService = TestBed.inject(ErrorHandlerService);
     httpMock = TestBed.inject(HttpTestingController);
-    httpClient = TestBed.inject(HttpClient);
 
     localStorage.clear();
   });
@@ -181,7 +178,7 @@ describe('Auth → Tickets Flow Integration (T042)', () => {
 
   it('should handle invalid credentials during login', (done) => {
     authService.login('invalid', 'wrong').subscribe(
-      () => fail('should have errored'),
+      () => done(new Error('should have errored')),
       (error) => {
         expect(error.status).toBe(401);
         const storedToken = authService.getToken();
@@ -198,12 +195,12 @@ describe('Auth → Tickets Flow Integration (T042)', () => {
   });
 
   it('should handle 401 during ticket fetch and redirect to login', (done) => {
-    const router = TestBed.inject(require('@angular/router').Router);
-    spyOn(router, 'navigate');
+    const router = TestBed.inject(Router);
+    jest.spyOn(router, 'navigate').mockImplementation(() => Promise.resolve(true));
 
     authService.login('user', 'pass').subscribe(() => {
       ticketsApiService.getTickets().subscribe(
-        () => fail('should have errored'),
+        () => done(new Error('should have errored')),
         (error: any) => {
           expect(error.status).toBe(401);
           // Interceptor should handle this and redirect
@@ -249,14 +246,17 @@ describe('Auth → Tickets Flow Integration (T042)', () => {
       });
 
       // Both requests should have been made with auth header
-      const allRequests = httpMock.match(
+      const page0Req = httpMock.expectOne(
         'http://localhost:8080/api/v1/tickets/all?page=0&size=20'
       );
-      allRequests.forEach((req) => {
+      const page1Req = httpMock.expectOne(
+        'http://localhost:8080/api/v1/tickets/all?page=1&size=20'
+      );
+      [page0Req, page1Req].forEach((req, index) => {
         expect(req.request.headers.get('Authorization')).toBe(`Bearer ${token}`);
         req.flush({
           items: [],
-          page: 0,
+          page: index,
           size: 20,
           total: 0,
           totalPages: 0,
@@ -301,7 +301,7 @@ describe('Auth → Tickets Flow Integration (T042)', () => {
   it('should handle 500 server errors on tickets endpoint', (done) => {
     authService.login('user', 'pass').subscribe(() => {
       ticketsApiService.getTickets().subscribe(
-        () => fail('should have errored'),
+        () => done(new Error('should have errored')),
         (error: any) => {
           expect(error.status).toBe(500);
           expect(error.message).toContain('Server error');
@@ -328,7 +328,7 @@ describe('Auth → Tickets Flow Integration (T042)', () => {
   it('should handle network errors during ticket fetch', (done) => {
     authService.login('user', 'pass').subscribe(() => {
       ticketsApiService.getTickets().subscribe(
-        () => fail('should have errored'),
+        () => done(new Error('should have errored')),
         (error: any) => {
           expect(error.status).toBe(0);
           expect(error.message).toContain('Unable to connect');
@@ -355,7 +355,7 @@ describe('Auth → Tickets Flow Integration (T042)', () => {
   it('should handle malformed response data', (done) => {
     authService.login('user', 'pass').subscribe(() => {
       ticketsApiService.getTickets().subscribe(
-        () => fail('should have errored'),
+        () => done(new Error('should have errored')),
         (error: any) => {
           expect(error.message).toContain('Invalid');
           done();

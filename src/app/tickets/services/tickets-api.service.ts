@@ -113,7 +113,7 @@ export class TicketsApiService {
    * Endpoint: GET /api/v1/tickets
    * Query params: page (0-indexed), size (1-100)
    */
-  getUserTickets(page: number = 0, size: number = 20): Observable<TicketsResponse> {
+  getUserTickets(page = 0, size = 20): Observable<TicketsResponse> {
     let httpParams = new HttpParams();
     httpParams = httpParams.set('page', page.toString());
     httpParams = httpParams.set('size', size.toString());
@@ -232,7 +232,21 @@ export class TicketsApiService {
    * @param error - HttpErrorResponse from failed request
    * @returns Observable that throws user-friendly error
    */
-  private handleError(error: HttpErrorResponse): Observable<never> {
+  private handleError(error: HttpErrorResponse | Error): Observable<never> {
+    // Client-side validation errors (thrown by validateAndTransformResponse,
+    // not returned by the HTTP layer) aren't HttpErrorResponses — surface
+    // their own message instead of falling through to "Unknown error" below.
+    if (!(error instanceof HttpErrorResponse)) {
+      this.logErrorContext({
+        endpoint: this.TICKETS_ALL_ENDPOINT,
+        statusCode: undefined,
+        timestamp: new Date().toISOString(),
+        userMessage: error.message,
+        error,
+      });
+      return throwError(() => ({ status: undefined, message: error.message, originalError: error }));
+    }
+
     let errorMessage: string;
 
     if (error.status === 401) {

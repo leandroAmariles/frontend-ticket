@@ -9,9 +9,9 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { AuthService } from '../../core/services/auth.service';
-import { TicketsApiService } from '../../tickets/services/tickets-api.service';
-import { ErrorHandlerService } from '../../core/services/error-handler.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { TicketsApiService } from '../../services/tickets-api.service';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 describe('Error Recovery and Retry Flow Integration (T043)', () => {
   let authService: AuthService;
@@ -41,7 +41,7 @@ describe('Error Recovery and Retry Flow Integration (T043)', () => {
   it('should display error message when API request fails', (done) => {
     authService.login('user', 'pass').subscribe(() => {
       ticketsApiService.getTickets().subscribe(
-        () => fail('should have errored'),
+        () => done(new Error('should have errored')),
         (error: any) => {
           // Verify error properties that would be displayed to user
           expect(error.message).toBeTruthy();
@@ -70,7 +70,7 @@ describe('Error Recovery and Retry Flow Integration (T043)', () => {
     authService.login('user', 'pass').subscribe(() => {
       // First attempt (fails)
       ticketsApiService.getTickets().subscribe(
-        () => fail('first request should fail'),
+        () => done(new Error('first request should fail')),
         (error: any) => {
           expect(error.status).toBe(500);
 
@@ -126,7 +126,7 @@ describe('Error Recovery and Retry Flow Integration (T043)', () => {
   it('should handle network timeout errors', (done) => {
     authService.login('user', 'pass').subscribe(() => {
       ticketsApiService.getTickets().subscribe(
-        () => fail('should have errored'),
+        () => done(new Error('should have errored')),
         (error: any) => {
           expect(error.status).toBe(0);
           expect(error.message).toContain('Unable to connect');
@@ -153,7 +153,7 @@ describe('Error Recovery and Retry Flow Integration (T043)', () => {
   it('should handle 403 Forbidden errors gracefully', (done) => {
     authService.login('user', 'pass').subscribe(() => {
       ticketsApiService.getTickets().subscribe(
-        () => fail('should have errored'),
+        () => done(new Error('should have errored')),
         (error: any) => {
           expect(error.status).toBe(403);
           expect(error.message).toContain('permission');
@@ -180,7 +180,7 @@ describe('Error Recovery and Retry Flow Integration (T043)', () => {
   it('should handle 400 Bad Request errors', (done) => {
     authService.login('user', 'pass').subscribe(() => {
       ticketsApiService.getTickets(999, 999).subscribe(
-        () => fail('should have errored'),
+        () => done(new Error('should have errored')),
         (error: any) => {
           expect(error.status).toBe(400);
           expect(error.message).toContain('Invalid request');
@@ -211,7 +211,7 @@ describe('Error Recovery and Retry Flow Integration (T043)', () => {
     authService.login('user', 'pass').subscribe(() => {
       // First attempt with specific page/size
       ticketsApiService.getTickets(page, size).subscribe(
-        () => fail('should fail'),
+        () => done(new Error('should fail')),
         () => {
           // Retry with same page/size
           ticketsApiService.getTickets(page, size).subscribe((response) => {
@@ -262,7 +262,7 @@ describe('Error Recovery and Retry Flow Integration (T043)', () => {
   it('should handle malformed JSON response', (done) => {
     authService.login('user', 'pass').subscribe(() => {
       ticketsApiService.getTickets().subscribe(
-        () => fail('should have errored'),
+        () => done(new Error('should have errored')),
         (error: any) => {
           expect(error.message).toContain('Invalid');
           done();
@@ -295,7 +295,7 @@ describe('Error Recovery and Retry Flow Integration (T043)', () => {
   it('should handle invalid ticket fields in response', (done) => {
     authService.login('user', 'pass').subscribe(() => {
       ticketsApiService.getTickets().subscribe(
-        () => fail('should have errored'),
+        () => done(new Error('should have errored')),
         (error: any) => {
           // Should fail validation due to missing required fields
           expect(error.message).toBeTruthy();
@@ -347,7 +347,7 @@ describe('Error Recovery and Retry Flow Integration (T043)', () => {
               // Retry
               makeAttempt();
             } else {
-              fail('Should have succeeded by attempt 3');
+              done(new Error('Should have succeeded by attempt 3'));
             }
           }
         );
@@ -399,7 +399,7 @@ describe('Error Recovery and Retry Flow Integration (T043)', () => {
     authService.login('user', 'pass').subscribe(() => {
       // First request fails
       ticketsApiService.getTickets().subscribe(
-        () => fail(),
+        () => done(new Error('unexpected success')),
         () => {
           // Error received, now make second request
           ticketsApiService.getTickets(1, 20).subscribe((response) => {
@@ -442,7 +442,7 @@ describe('Error Recovery and Retry Flow Integration (T043)', () => {
       const tokenBefore = authService.getToken();
 
       ticketsApiService.getTickets().subscribe(
-        () => fail(),
+        () => done(new Error('unexpected success')),
         () => {
           // Even after error, token should still be valid
           const tokenAfter = authService.getToken();

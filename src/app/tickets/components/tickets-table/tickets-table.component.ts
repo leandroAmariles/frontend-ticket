@@ -28,8 +28,16 @@ export class TicketsTableComponent implements OnInit, OnChanges {
   @Input() pagination: { page: number; size: number; total: number; totalPages: number } | null = null;
   @Input() isLoading = false;
   @Input() dataTestId = 'tickets-table';
+  /**
+   * Page size the user just picked, while the request for it is still in
+   * flight (feature 003-fix-page-size-selector, US2 optimistic update).
+   * Takes priority over currentPageSize in the paginator's [pageSize]
+   * binding so the selector never appears to revert while loading.
+   */
+  @Input() attemptedPageSize?: number | null;
 
   @Output() pageChange = new EventEmitter<PageEvent>();
+  @Output() pageSizeChange = new EventEmitter<PageEvent>();
   @Output() createTicket = new EventEmitter<void>();
 
   displayedColumns: string[] = [
@@ -66,12 +74,25 @@ export class TicketsTableComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Handle pagination events from MatPaginator
+   * Handle pagination events from MatPaginator.
+   * MatPaginator only exposes a single (page) output for both page
+   * navigation AND page size changes (there's no separate pageSizeChange
+   * event on it), so the two are told apart here by comparing the event's
+   * pageSize against the size we were last rendering with, and routed to
+   * distinct outputs — page-size changes go through pageSizeChange, which
+   * the list page wires to TicketsStateService.updatePageSize() (reset to
+   * page 0, optimistic update); plain navigation keeps using pageChange.
    */
   onPageEvent(event: PageEvent): void {
+    const sizeChanged = event.pageSize !== this.currentPageSize;
     // Update local size immediately so the selector doesn't revert
     this.currentPageSize = event.pageSize;
-    this.pageChange.emit(event);
+
+    if (sizeChanged) {
+      this.pageSizeChange.emit(event);
+    } else {
+      this.pageChange.emit(event);
+    }
   }
 
   /**

@@ -4,72 +4,57 @@
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { of } from 'rxjs';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { of, Observable } from 'rxjs';
 
 import { TicketsListPageComponent } from '../../pages/tickets-list-page/tickets-list-page.component';
-import { TicketsTableComponent } from '../../components/tickets-table/tickets-table.component';
-import { TicketFiltersComponent } from '../../components/ticket-filters/ticket-filters.component';
 import { TicketsStateService } from '../../services/tickets-state.service';
-import { RouterTestingModule } from '@angular/router/testing';
-import { ReactiveFormsModule } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatSortModule } from '@angular/material/sort';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TicketCreateDialogComponent } from '../../components/ticket-create-dialog/ticket-create-dialog.component';
+import { Ticket } from '../../models';
 
 describe('TicketsListPage - Integration Tests', () => {
   let component: TicketsListPageComponent;
   let fixture: ComponentFixture<TicketsListPageComponent>;
-  let mockStateService: any;
+  let mockStateService: {
+    loadTickets: jest.Mock;
+    reset: jest.Mock;
+    tickets$: Observable<Ticket[]>;
+    loading$: Observable<boolean>;
+    error$: Observable<string | null>;
+    pagination$: Observable<{ page: number; size: number; total: number; totalPages: number } | null>;
+  };
+  let mockDialog: { open: jest.Mock };
 
   beforeEach(async () => {
     mockStateService = {
-      refresh: jest.fn(),
+      loadTickets: jest.fn(),
       reset: jest.fn(),
       tickets$: of([
         {
           id: '1',
-          title: 'Test Ticket 1',
-          description: 'Description 1',
-          priority: 'high',
-          status: 'open',
-          assigned_to_id: null,
-          assigned_to_name: null,
-          created_at: '2026-04-25T10:15:30Z',
+          titulo: 'Test Ticket 1',
+          descripcion: 'Description 1',
+          status: 'PENDING',
+          creatorId: null,
+          fecha: '2026-04-25T10:15:30Z',
+          createdAt: '2026-04-25T10:15:30Z',
         },
       ]),
       loading$: of(false),
       error$: of(null),
-      meta$: of({ total: 1, page: 1, page_size: 25, total_pages: 1 }),
-    } as any;
+      pagination$: of({ page: 0, size: 20, total: 1, totalPages: 1 }),
+    };
 
-    mockStateService.refresh.mockReturnValue(
-      of({ data: [], meta: { total: 0, page: 1, page_size: 25, total_pages: 0 } })
-    );
+    mockDialog = { open: jest.fn() };
 
     await TestBed.configureTestingModule({
-      declarations: [
-        TicketsListPageComponent,
-        TicketsTableComponent,
-        TicketFiltersComponent,
+      declarations: [TicketsListPageComponent],
+      schemas: [NO_ERRORS_SCHEMA],
+      providers: [
+        { provide: TicketsStateService, useValue: mockStateService },
+        { provide: MatDialog, useValue: mockDialog },
       ],
-      imports: [
-        NoopAnimationsModule,
-        RouterTestingModule,
-        ReactiveFormsModule,
-        MatTableModule,
-        MatPaginatorModule,
-        MatSortModule,
-        MatFormFieldModule,
-        MatSelectModule,
-        MatButtonModule,
-        MatProgressSpinnerModule,
-      ],
-      providers: [{ provide: TicketsStateService, useValue: mockStateService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TicketsListPageComponent);
@@ -77,10 +62,10 @@ describe('TicketsListPage - Integration Tests', () => {
   });
 
   describe('Page Load', () => {
-    it('should load and display tickets', () => {
+    it('should load tickets on init', () => {
       fixture.detectChanges();
 
-      expect(mockStateService.refresh).toHaveBeenCalled();
+      expect(mockStateService.loadTickets).toHaveBeenCalledWith(0, 20);
       expect(component.tickets$).toBeDefined();
     });
 
@@ -90,74 +75,41 @@ describe('TicketsListPage - Integration Tests', () => {
       const button = fixture.nativeElement.querySelector('[data-testid="btn-new-ticket"]');
       expect(button).toBeTruthy();
     });
-
-    it('should display filters component', () => {
-      fixture.detectChanges();
-
-      const filters = fixture.debugElement.query(
-        (el) => el.name === 'app-ticket-filters'
-      );
-      expect(filters).toBeTruthy();
-    });
   });
 
   describe('Pagination', () => {
     it('should handle page change', () => {
       fixture.detectChanges();
+      mockStateService.loadTickets.mockClear(); // ignore the initial ngOnInit call
 
-      const pageEvent = { pageIndex: 1, pageSize: 50, length: 100 };
+      const pageEvent = { pageIndex: 1, pageSize: 50 };
       component.onPageChange(pageEvent);
 
-      expect(mockStateService.refresh).toHaveBeenCalledWith(
-        expect.objectContaining({
-          page: 2, // pageIndex is 0-based
-          page_size: 50,
-        })
-      );
-    });
-  });
-
-  describe('Filtering', () => {
-    it('should handle filter changes', () => {
-      fixture.detectChanges();
-
-      const filters = { priority: 'high', status: 'open' };
-      component.onFiltersChange(filters);
-
-      expect(mockStateService.refresh).toHaveBeenCalledWith(
-        expect.objectContaining({
-          page: 1,
-          priority: 'high',
-          status: 'open',
-        })
-      );
-    });
-
-    it('should reset page when filters change', () => {
-      fixture.detectChanges();
-      component.currentParams.page = 3;
-
-      const filters = { priority: 'high' };
-      component.onFiltersChange(filters);
-
-      const calls = mockStateService.refresh.mock.calls;
-      const lastCall = calls.length ? calls[calls.length - 1][0] : undefined;
-      expect(lastCall?.page).toBe(1);
+      expect(mockStateService.loadTickets).toHaveBeenCalledWith(1, 50);
     });
   });
 
   describe('Navigation', () => {
     it('should open the create-ticket dialog on New Ticket click', () => {
       fixture.detectChanges();
-
-      const dialog = TestBed.inject(require('@angular/material/dialog').MatDialog) as any;
-      const afterClosedSpy = jest.spyOn(dialog, 'open').mockReturnValue({
-        afterClosed: () => of(false),
-      } as any);
+      mockDialog.open.mockReturnValue({ afterClosed: () => of(false) });
 
       component.openCreateDialog();
 
-      expect(afterClosedSpy).toHaveBeenCalled();
+      expect(mockDialog.open).toHaveBeenCalledWith(
+        TicketCreateDialogComponent,
+        expect.objectContaining({ width: '560px' })
+      );
+    });
+
+    it('should reload the current page when the dialog closes with a created ticket', () => {
+      fixture.detectChanges();
+      mockStateService.loadTickets.mockClear();
+      mockDialog.open.mockReturnValue({ afterClosed: () => of(true) });
+
+      component.openCreateDialog();
+
+      expect(mockStateService.loadTickets).toHaveBeenCalledWith(0, 20);
     });
   });
 
@@ -170,4 +122,3 @@ describe('TicketsListPage - Integration Tests', () => {
     });
   });
 });
-

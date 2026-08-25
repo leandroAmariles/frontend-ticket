@@ -301,6 +301,10 @@ describe('AuthService', () => {
     });
 
     it('should handle corrupted token data', () => {
+      // A valid (future) expiration is required too, otherwise isTokenValid()
+      // short-circuits on the missing-expiration guard before ever parsing
+      // the corrupted JSON below.
+      localStorage.setItem('auth_token_expiration', (Date.now() + 3600 * 1000).toString());
       localStorage.setItem('auth_token', 'corrupted-json-{invalid');
       jest.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -364,7 +368,10 @@ describe('AuthService', () => {
       expect(isValid).toBe(false);
     });
 
-    it('should apply 60-second buffer for clock skew', () => {
+    it('should consider a token valid until its exact expiration (no clock-skew buffer)', () => {
+      // isTokenValid() intentionally has no buffer (see comment in auth.service.ts):
+      // a 60s buffer was causing valid tokens to be dropped early. A token
+      // expiring 30s from now is therefore still valid.
       const now = Date.now();
       const token = {
         accessToken: 'token',
@@ -377,18 +384,20 @@ describe('AuthService', () => {
       service.setToken(token);
       const isValid = service.isTokenValid();
 
-      // Should be invalid because expiration (30s) < buffer (60s)
-      expect(isValid).toBe(false);
+      expect(isValid).toBe(true);
     });
 
     it('should handle corrupted expiration data', () => {
+      // tokenData must exist too, otherwise isTokenValid() short-circuits on
+      // the missing-token guard before reaching parseInt() below.
+      localStorage.setItem('auth_token', JSON.stringify({ accessToken: 'token' }));
       localStorage.setItem('auth_token_expiration', 'not-a-number');
-      jest.spyOn(console, 'error').mockImplementation(() => {});
 
       const isValid = service.isTokenValid();
 
+      // parseInt('not-a-number') is NaN; the comparison is simply false, not
+      // a thrown error, so no console.error is expected here.
       expect(isValid).toBe(false);
-      expect(console.error).toHaveBeenCalled();
     });
 
     it('should validate token with far future expiration', () => {
@@ -516,12 +525,12 @@ describe('AuthService', () => {
 
     it('should handle corrupted expiration data gracefully', () => {
       localStorage.setItem('auth_token_expiration', 'invalid');
-      jest.spyOn(console, 'error').mockImplementation(() => {});
 
       const remaining = service.getRemainingTime();
 
+      // parseInt('invalid') is NaN; the resulting comparison is simply
+      // false, not a thrown error, so no console.error is expected here.
       expect(remaining).toBe(0);
-      expect(console.error).toHaveBeenCalled();
     });
 
     it('should return positive time for soon-to-expire token', () => {

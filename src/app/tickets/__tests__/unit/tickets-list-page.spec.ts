@@ -10,9 +10,12 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { TicketsListPageComponent } from '../../pages/tickets-list-page/tickets-list-page.component';
 import { TicketsStateService } from '../../services/tickets-state.service';
 import { of } from 'rxjs';
+
+const mockDialogProvider = { provide: MatDialog, useValue: { open: jest.fn() } };
 
 describe('TicketsListPageComponent - Page Size Change (T012, T015, T016, T020, T023)', () => {
   let component: TicketsListPageComponent;
@@ -35,12 +38,7 @@ describe('TicketsListPageComponent - Page Size Change (T012, T015, T016, T020, T
             reset: jest.fn(),
           },
         },
-        {
-          provide: 'Router',
-          useValue: {
-            navigate: jest.fn(),
-          },
-        },
+        mockDialogProvider,
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
@@ -144,10 +142,7 @@ describe('TicketsListPageComponent - Page Size Change (T012, T015, T016, T020, T
               reset: jest.fn(),
             },
           },
-          {
-            provide: 'Router',
-            useValue: { navigate: jest.fn() },
-          },
+          mockDialogProvider,
         ],
         schemas: [NO_ERRORS_SCHEMA],
       });
@@ -183,10 +178,7 @@ describe('TicketsListPageComponent - Page Size Change (T012, T015, T016, T020, T
               reset: jest.fn(),
             },
           },
-          {
-            provide: 'Router',
-            useValue: { navigate: jest.fn() },
-          },
+          mockDialogProvider,
         ],
         schemas: [NO_ERRORS_SCHEMA],
       });

@@ -88,7 +88,7 @@
   <mat-paginator
     *ngIf="pagination"
     [length]="pagination.total"
-    [pageSize]="currentPageSize"
+    [pageSize]="attemptedPageSize ?? currentPageSize"
     [pageIndex]="pagination.page"
     [pageSizeOptions]="pageSizeOptions"
     [disabled]="isLoading"
