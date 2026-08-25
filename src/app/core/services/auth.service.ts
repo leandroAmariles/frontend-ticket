@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
-import { AuthToken, LoginResponse, LoginRequest } from '../models';
+import { map } from 'rxjs/operators';
+import { AuthToken, LoginRequest } from '../models';
 import { decodeJwtPayload } from '../utils/jwt.util';
 
 /**
