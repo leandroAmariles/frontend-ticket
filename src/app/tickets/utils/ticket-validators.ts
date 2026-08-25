@@ -20,20 +20,17 @@ export function isValidTicket(obj: any): obj is Ticket {
     return false;
   }
 
-  // Check required string fields
-  const requiredStringFields = ['id', 'titulo', 'descripcion', 'status', 'creatorId'];
+  // Check required string fields (matching actual backend response)
+  const requiredStringFields = ['id', 'titulo', 'descripcion', 'status'];
   for (const field of requiredStringFields) {
     if (typeof obj[field] !== 'string') {
       return false;
     }
   }
 
-  // Check required date fields (should be string ISO format or Date)
-  const requiredDateFields = ['createdAt', 'updatedAt'];
-  for (const field of requiredDateFields) {
-    if (!(typeof obj[field] === 'string' || obj[field] instanceof Date)) {
-      return false;
-    }
+  // createdAt is required
+  if (!(typeof obj['createdAt'] === 'string' || obj['createdAt'] instanceof Date)) {
+    return false;
   }
 
   // Validate status enum values
@@ -42,9 +39,8 @@ export function isValidTicket(obj: any): obj is Ticket {
     return false;
   }
 
-  // Optional fields (we allow them to exist but don't require them)
-  // fecha, descripcion variations, etc.
-
+  // Optional fields are allowed: ticketType, severity, priority, type, updatedAt
+  // These can be undefined or string without failing validation
   return true;
 }
 
@@ -71,13 +67,12 @@ export function validateTicketResponse(response: any): ValidationResult {
     return { valid: false, errors };
   }
 
-  // Validate required string fields
+  // Validate required string fields (matching actual backend response)
   const requiredStringFields: (keyof Ticket)[] = [
     'id',
     'titulo',
     'descripcion',
     'status',
-    'creatorId',
   ];
 
   for (const field of requiredStringFields) {
@@ -90,16 +85,11 @@ export function validateTicketResponse(response: any): ValidationResult {
     }
   }
 
-  // Validate required date fields
-  const requiredDateFields: (keyof Ticket)[] = ['createdAt', 'updatedAt'];
-  for (const field of requiredDateFields) {
-    if (!(field in response)) {
-      errors.push(`Missing required field: "${field}"`);
-    } else if (!(typeof response[field] === 'string' || response[field] instanceof Date)) {
-      errors.push(
-        `Field "${field}" has invalid type: expected ISO string or Date, got ${typeof response[field]}`
-      );
-    }
+  // Validate createdAt
+  if (!('createdAt' in response)) {
+    errors.push('Missing required field: "createdAt"');
+  } else if (!(typeof response['createdAt'] === 'string' || response['createdAt'] instanceof Date)) {
+    errors.push(`Field "createdAt" has invalid type: expected ISO string or Date`);
   }
 
   // Validate status enum value
@@ -107,23 +97,15 @@ export function validateTicketResponse(response: any): ValidationResult {
     const validStatuses = ['PENDING', 'CREATED'];
     if (!validStatuses.includes(response.status)) {
       errors.push(
-        `Field "status" has invalid value: "${response.status}". Expected one of: ${validStatuses.join(
-          ', '
-        )}`
+        `Field "status" has invalid value: "${response.status}". Expected one of: ${validStatuses.join(', ')}`
       );
     }
   }
 
-  // Check for date format if createdAt or updatedAt are strings
-  const dateFields = ['createdAt', 'updatedAt'];
-  for (const field of dateFields) {
-    if (typeof response[field] === 'string') {
-      // Basic ISO 8601 check
-      if (!/^\d{4}-\d{2}-\d{2}/.test(response[field])) {
-        errors.push(
-          `Field "${field}" is not in ISO 8601 format: "${response[field]}"`
-        );
-      }
+  // Basic ISO 8601 check for createdAt
+  if (typeof response['createdAt'] === 'string') {
+    if (!/^\d{4}-\d{2}-\d{2}/.test(response['createdAt'])) {
+      errors.push(`Field "createdAt" is not in ISO 8601 format: "${response['createdAt']}"`);
     }
   }
 

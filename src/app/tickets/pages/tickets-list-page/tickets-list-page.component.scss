@@ -25,9 +25,9 @@
 .error-message {
   padding: 16px;
   margin-bottom: 16px;
-  background-color: #ffebee;
-  color: #c62828;
-  border-radius: 4px;
+  background-color: var(--app-error-bg);
+  color: var(--app-error);
+  border-radius: var(--app-radius-sm);
 
   p {
     margin: 0 0 8px 0;
@@ -44,7 +44,7 @@
 
   p {
     margin: 0;
-    color: #666;
+    color: var(--app-text-secondary);
   }
 }
 

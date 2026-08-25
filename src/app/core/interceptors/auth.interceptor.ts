@@ -1,11 +1,5 @@
 import { Injectable } from '@angular/core';
-import {
-  HttpRequest,
-  HttpHandler,
-  HttpEvent,
-  HttpInterceptor,
-  HttpErrorResponse,
-} from '@angular/common/http';
+import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -155,17 +149,27 @@ export class AuthInterceptor implements HttpInterceptor {
     // Handle response and potential errors
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
-        // Handle 401 Unauthorized responses
-        if (error.status === 401) {
-          // Clear the expired token
-          this.authService.clearToken();
+        // Handle 401 Unauthorized responses — but NOT for the login endpoint itself
+        // (login failures should be handled by the login component, not redirected)
+        const isLoginEndpoint = request.url.includes('/api/auth/login');
+        if (error.status === 401 && !isLoginEndpoint) {
+          // Clear the expired token — guarded so a storage failure here
+          // (e.g. localStorage throwing) never replaces the original 401
+          // with a different error in the stream the caller observes.
+          try {
+            this.authService.clearToken();
+          } catch (clearError) {
+            console.error('Error clearing token after 401:', clearError);
+          }
 
           // Display user-friendly message
           console.warn('Session expired. Please login again.');
 
-          // Redirect to login page
+          // Redirect to login page, but never with returnUrl=/login to avoid loops
+          const currentUrl = this.router.url.split('?')[0]; // strip existing query params
+          const returnUrl = currentUrl === '/login' ? '/tickets' : currentUrl;
           this.router.navigate(['/login'], {
-            queryParams: { returnUrl: this.router.url }
+            queryParams: { returnUrl }
           });
         }
 

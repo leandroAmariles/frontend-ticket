@@ -1,0 +1,63 @@
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--app-spacing-md);
+  margin-bottom: var(--app-spacing-lg);
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: var(--app-spacing-md);
+  padding: var(--app-spacing-md);
+  background-color: var(--app-surface);
+  border-radius: var(--app-radius-md);
+  box-shadow: var(--app-shadow-sm);
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--app-radius-sm);
+  flex-shrink: 0;
+
+  mat-icon {
+    color: #fff;
+  }
+}
+
+.stat-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--app-text-primary);
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--app-text-secondary);
+}
+
+.card-blue .stat-icon {
+  background-color: #2f6fed;
+}
+
+.card-amber .stat-icon {
+  background-color: #f2a93c;
+}
+
+.card-green .stat-icon {
+  background-color: #2fb380;
+}
+
+.card-purple .stat-icon {
+  background-color: #8b5cf6;
+}

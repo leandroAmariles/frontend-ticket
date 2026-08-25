@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, Subject, of } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { BehaviorSubject, Subject, EMPTY } from 'rxjs';
+import { switchMap, takeUntil, catchError } from 'rxjs/operators';
 
 import { Ticket, TicketsResponse } from '../models';
 import { TicketsApiService } from './tickets-api.service';
@@ -38,35 +38,76 @@ export class TicketsStateService implements OnDestroy {
   } | null>(null);
   public readonly pagination$ = this.paginationSubject.asObservable();
 
-  // Cleanup signal
+  /**
+   * Page size the user selected but whose API request is still in flight
+   * (feature 003-fix-page-size-selector, US2). Lets the selector show the
+   * user's choice immediately instead of snapping back until the response
+   * arrives. Cleared on success; kept on error so the failed attempt stays
+   * visible alongside the error message.
+   */
+  private readonly attemptedPageSizeSubject = new BehaviorSubject<number | undefined>(undefined);
+  public readonly attemptedPageSize$ = this.attemptedPageSizeSubject.asObservable();
+
+  private static readonly VALID_PAGE_SIZES = [10, 20, 50];
+
+  /** Emits whenever a new load is requested — switchMap cancels the previous one */
+  private readonly loadTrigger$ = new Subject<{ page: number; size: number }>();
   private readonly destroy$ = new Subject<void>();
 
-  constructor(private apiService: TicketsApiService) {}
+  constructor(private apiService: TicketsApiService) {
+    // Single long-lived subscription using switchMap to cancel in-flight requests.
+    // catchError is placed INSIDE switchMap so errors from individual HTTP calls
+    // are handled without terminating the outer subscription — Retry keeps working.
+    this.loadTrigger$
+      .pipe(
+        switchMap(({ page, size }) => {
+          this.loadingSubject.next(true);
+          this.errorSubject.next(null);
+          return this.apiService.getTickets(page, size).pipe(
+            catchError((error: any) => {
+              this.handleError(error);
+              return EMPTY; // absorb the error; outer stream stays alive
+            })
+          );
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (response: TicketsResponse) => this.handleSuccess(response),
+      });
+  }
 
   /**
-   * Load tickets from the API
-   * Manages loading and error states automatically
-   *
-   * @param page - Page number (0-indexed), defaults to 0
-   * @param size - Page size, defaults to 20
+   * Load (or reload) tickets. Cancels any in-flight request automatically.
    */
   loadTickets(page = 0, size = 20): void {
-    // Set loading state
-    this.loadingSubject.next(true);
-    this.errorSubject.next(null);
+    this.loadTrigger$.next({ page, size });
+  }
 
-    // Call API service
-    this.apiService
-      .getTickets(page, size)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: TicketsResponse) => {
-          this.handleSuccess(response);
-        },
-        error: (error: any) => {
-          this.handleError(error);
-        },
-      });
+  /**
+   * Change the page size (feature 003-fix-page-size-selector).
+   *
+   * - US1: always requests page 0 with the new size — the current page index
+   *   is never valid for a different size, so it's reset rather than kept.
+   * - US2: sets attemptedPageSize immediately (optimistic update) so the
+   *   selector can show the user's choice before the API responds; cleared
+   *   on success, kept on error (see handleSuccess/handleError).
+   * - Invalid sizes (must be one of [10, 20, 50]) default to 20 rather than
+   *   being silently rejected, so the UI never gets stuck showing a size
+   *   that isn't one of the selectable options.
+   */
+  updatePageSize(newSize: number): void {
+    const validSize = TicketsStateService.VALID_PAGE_SIZES.includes(newSize) ? newSize : 20;
+    this.attemptedPageSizeSubject.next(validSize);
+    this.loadTickets(0, validSize);
+  }
+
+  /**
+   * Get the current pagination snapshot (page, size, total, totalPages), or
+   * null if no page has loaded yet.
+   */
+  getPagination(): { page: number; size: number; total: number; totalPages: number } | null {
+    return this.paginationSubject.value;
   }
 
   /**
@@ -82,6 +123,7 @@ export class TicketsStateService implements OnDestroy {
       totalPages: response.totalPages,
     });
     this.loadingSubject.next(false);
+    this.attemptedPageSizeSubject.next(undefined);
   }
 
   /**
@@ -89,9 +131,11 @@ export class TicketsStateService implements OnDestroy {
    * Extracts user-friendly message and updates error state
    */
   private handleError(error: any): void {
-    const errorMessage = error?.message || 'Failed to load tickets. Please try again.';
+    const errorMessage = error?.message || 'Error al cargar los tickets. Inténtalo de nuevo.';
     this.errorSubject.next(errorMessage);
     this.loadingSubject.next(false);
+    // attemptedPageSize is deliberately NOT cleared here: the selector should
+    // keep showing what the user picked, alongside the error, per US2.
   }
 
   /**
@@ -109,22 +153,6 @@ export class TicketsStateService implements OnDestroy {
   }
 
   /**
-   * Re-query for a new ticket (placeholder for future implementation)
-   * NOTE: This feature is out of scope for the 002-consume-backend-api feature
-   *
-   * @param targetTicketId - ID of ticket to search for
-   * @param onSuccess - Callback when ticket is found
-   * @returns Observable that completes when ticket is found or timeout
-   */
-  reQueryForNewTicket(
-    targetTicketId: string,
-    onSuccess?: (ticket: Ticket) => void
-  ): Observable<Ticket | null> {
-    // TODO: Implement re-query logic for newly created tickets
-    return of(null);
-  }
-
-  /**
    * Clear all state (useful when component is destroyed or user navigates away)
    */
   reset(): void {
@@ -132,6 +160,7 @@ export class TicketsStateService implements OnDestroy {
     this.paginationSubject.next(null);
     this.loadingSubject.next(false);
     this.errorSubject.next(null);
+    this.attemptedPageSizeSubject.next(undefined);
   }
 
   /**
@@ -143,4 +172,3 @@ export class TicketsStateService implements OnDestroy {
     this.destroy$.complete();
   }
 }
-

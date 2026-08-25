@@ -1,24 +1,29 @@
 /**
- * Contract tests for GET /tickets endpoint
- * Validates the API contract as defined in contracts/tickets-api.md
+ * Contract tests for GET /api/v1/tickets/all
+ * Validates the real backend contract: page/size query params, and an
+ * { items, page, size, total, totalPages } response shape (see
+ * TicketsApiService.getTickets and models/index.ts).
  */
 
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { environment } from '../../../../environments/environment';
 import { TicketsApiService } from '../../services/tickets-api.service';
-import { TicketsListResponse } from '../../models';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
+import { TicketsResponse } from '../../models';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
-describe('GET /tickets - Contract Tests', () => {
+const BASE_URL = 'http://localhost:8080/api/v1/tickets/all';
+
+describe('GET /api/v1/tickets/all - Contract Tests', () => {
   let service: TicketsApiService;
   let httpMock: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [TicketsApiService],
-    });
+    imports: [],
+    providers: [TicketsApiService, ErrorHandlerService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+});
 
     service = TestBed.inject(TicketsApiService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -28,172 +33,117 @@ describe('GET /tickets - Contract Tests', () => {
     httpMock.verify();
   });
 
-  describe('API Contract: GET /tickets', () => {
-    it('should return response with data array and meta object', (done) => {
-      service.listTickets({ page: 1, page_size: 25 }).subscribe((response: TicketsListResponse) => {
-        // Validate response structure
-        expect(response).toHaveProperty('data');
-        expect(response).toHaveProperty('meta');
-        expect(Array.isArray(response.data)).toBe(true);
-        done();
-      });
+  it('should return response with an items array and pagination fields', (done) => {
+    service.getTickets(1, 25).subscribe((response: TicketsResponse) => {
+      expect(response).toHaveProperty('items');
+      expect(response).toHaveProperty('page');
+      expect(response).toHaveProperty('size');
+      expect(response).toHaveProperty('total');
+      expect(response).toHaveProperty('totalPages');
+      expect(Array.isArray(response.items)).toBe(true);
+      done();
+    });
 
-      const req = httpMock.expectOne(
-        `${environment.apiBaseUrl}/tickets?page=1&page_size=25`
-      );
-      expect(req.request.method).toBe('GET');
+    const req = httpMock.expectOne(`${BASE_URL}?page=1&size=25`);
+    expect(req.request.method).toBe('GET');
 
-      // Mock response per contracts/tickets-api.md
-      const mockResponse: TicketsListResponse = {
-        data: [
-          {
-            id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-            title: 'No puedo iniciar sesión',
-            description: 'El usuario reporta error 500 al iniciar sesión',
-            priority: 'high',
-            status: 'open',
-            assigned_to_id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-            assigned_to_name: 'María Pérez',
-            created_at: '2026-04-25T10:15:30Z',
-          },
-        ],
-        meta: {
-          total: 1234,
-          page: 1,
-          page_size: 25,
-          total_pages: 50,
+    const mockResponse: TicketsResponse = {
+      items: [
+        {
+          id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+          titulo: 'No puedo iniciar sesión',
+          descripcion: 'El usuario reporta error 500 al iniciar sesión',
+          status: 'PENDING',
+          creatorId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          fecha: '2026-04-25T10:15:30Z',
+          createdAt: '2026-04-25T10:15:30Z',
         },
-      };
+      ],
+      page: 1,
+      size: 25,
+      total: 1234,
+      totalPages: 50,
+    };
 
-      req.flush(mockResponse);
+    req.flush(mockResponse);
+  });
+
+  it('should include pagination metadata', (done) => {
+    service.getTickets(1, 50).subscribe((response: TicketsResponse) => {
+      expect(response.total).toBeDefined();
+      expect(response.page).toBe(1);
+      expect(response.size).toBe(50);
+      expect(response.totalPages).toBeDefined();
+      done();
     });
 
-    it('should include pagination metadata', (done) => {
-      service.listTickets({ page: 1, page_size: 50 }).subscribe((response: TicketsListResponse) => {
-        // Validate meta structure per contracts/tickets-api.md
-        expect(response.meta.total).toBeDefined();
-        expect(response.meta.page).toBe(1);
-        expect(response.meta.page_size).toBe(50);
-        expect(response.meta.total_pages).toBeDefined();
-        done();
-      });
+    const req = httpMock.expectOne(`${BASE_URL}?page=1&size=50`);
 
-      const req = httpMock.expectOne(
-        `${environment.apiBaseUrl}/tickets?page=1&page_size=50`
-      );
+    const mockResponse: TicketsResponse = {
+      items: [],
+      page: 1,
+      size: 50,
+      total: 100,
+      totalPages: 2,
+    };
 
-      const mockResponse: TicketsListResponse = {
-        data: [],
-        meta: {
-          total: 100,
-          page: 1,
-          page_size: 50,
-          total_pages: 2,
+    req.flush(mockResponse);
+  });
+
+  it('should send page and size as query params', (done) => {
+    service.getTickets(3, 10).subscribe(() => done());
+
+    const req = httpMock.expectOne(
+      (request) =>
+        request.url === BASE_URL &&
+        request.params.get('page') === '3' &&
+        request.params.get('size') === '10'
+    );
+
+    expect(req.request.method).toBe('GET');
+
+    req.flush({ items: [], page: 3, size: 10, total: 0, totalPages: 0 });
+  });
+
+  it('should handle an empty items array', (done) => {
+    service.getTickets(2, 25).subscribe((response: TicketsResponse) => {
+      expect(response.items).toEqual([]);
+      expect(response.total).toBe(0);
+      done();
+    });
+
+    const req = httpMock.expectOne(`${BASE_URL}?page=2&size=25`);
+
+    req.flush({ items: [], page: 2, size: 25, total: 0, totalPages: 0 });
+  });
+
+  it('should handle a null creatorId (unassigned ticket)', (done) => {
+    service.getTickets(1, 25).subscribe((response: TicketsResponse) => {
+      const unassigned = response.items[0];
+      expect(unassigned.creatorId).toBeNull();
+      done();
+    });
+
+    const req = httpMock.expectOne(`${BASE_URL}?page=1&size=25`);
+
+    const mockResponse: TicketsResponse = {
+      items: [
+        {
+          id: '123',
+          titulo: 'Test',
+          descripcion: 'Test',
+          status: 'PENDING',
+          creatorId: null,
+          fecha: '2026-04-25T10:15:30Z',
+          createdAt: '2026-04-25T10:15:30Z',
         },
-      };
+      ],
+      page: 1,
+      size: 25,
+      total: 1,
+      totalPages: 1,
+    };
 
-      req.flush(mockResponse);
-    });
-
-    it('should support filter parameters (priority, status)', (done) => {
-      service
-        .listTickets({
-          page: 1,
-          page_size: 25,
-          priority: 'high',
-          status: 'open',
-        })
-        .subscribe(() => {
-          done();
-        });
-
-      const req = httpMock.expectOne(
-        (request) =>
-          request.url.includes(`${environment.apiBaseUrl}/tickets`) &&
-          request.params.get('priority') === 'high' &&
-          request.params.get('status') === 'open'
-      );
-
-      expect(req.request.method).toBe('GET');
-
-      req.flush({
-        data: [],
-        meta: { total: 0, page: 1, page_size: 25, total_pages: 0 },
-      });
-    });
-
-    it('should support sort parameter', (done) => {
-      service
-        .listTickets({
-          page: 1,
-          page_size: 25,
-          sort: 'created_at:desc',
-        })
-        .subscribe(() => {
-          done();
-        });
-
-      const req = httpMock.expectOne(
-        (request) =>
-          request.url.includes(`${environment.apiBaseUrl}/tickets`) &&
-          request.params.get('sort') === 'created_at:desc'
-      );
-
-      expect(req.request.method).toBe('GET');
-
-      req.flush({
-        data: [],
-        meta: { total: 0, page: 1, page_size: 25, total_pages: 0 },
-      });
-    });
-
-    it('should handle empty data array', (done) => {
-      service.listTickets({ page: 2, page_size: 25 }).subscribe((response: TicketsListResponse) => {
-        expect(response.data).toEqual([]);
-        expect(response.meta.total).toBe(0);
-        done();
-      });
-
-      const req = httpMock.expectOne(
-        `${environment.apiBaseUrl}/tickets?page=2&page_size=25`
-      );
-
-      req.flush({
-        data: [],
-        meta: { total: 0, page: 2, page_size: 25, total_pages: 0 },
-      });
-    });
-
-    it('should handle null assigned_to fields', (done) => {
-      service.listTickets({ page: 1, page_size: 25 }).subscribe((response: TicketsListResponse) => {
-        const ticketWithoutAssignee = response.data[0];
-        expect(ticketWithoutAssignee.assigned_to_id).toBeNull();
-        expect(ticketWithoutAssignee.assigned_to_name).toBeNull();
-        done();
-      });
-
-      const req = httpMock.expectOne(
-        `${environment.apiBaseUrl}/tickets?page=1&page_size=25`
-      );
-
-      const mockResponse: TicketsListResponse = {
-        data: [
-          {
-            id: '123',
-            title: 'Test',
-            description: 'Test',
-            priority: 'low',
-            status: 'open',
-            assigned_to_id: null,
-            assigned_to_name: null,
-            created_at: '2026-04-25T10:15:30Z',
-          },
-        ],
-        meta: { total: 1, page: 1, page_size: 25, total_pages: 1 },
-      };
-
-      req.flush(mockResponse);
-    });
+    req.flush(mockResponse);
   });
 });
-

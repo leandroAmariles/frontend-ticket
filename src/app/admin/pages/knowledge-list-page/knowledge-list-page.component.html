@@ -1,0 +1,50 @@
+<div class="knowledge-page" role="main" aria-label="RAG knowledge base admin">
+  <div class="page-header">
+    <div>
+      <h1>Alimentar históricos (RAG)</h1>
+      <p class="subtitle">
+        Cada categoría alimenta los embeddings que usa el asistente para categorizar y responder tickets.
+      </p>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message" role="alert">{{ errorMessage }}</div>
+
+  <div *ngIf="loading" class="loading-state" role="status" aria-live="polite">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div class="cards-grid" *ngIf="!loading">
+    <mat-card *ngFor="let slot of slots" class="category-card">
+      <mat-card-header>
+        <mat-card-title>{{ slot.label }}</mat-card-title>
+        <mat-card-subtitle *ngIf="slot.document">
+          Actualizado: {{ slot.document.updatedAt | date: 'short' }}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <span
+          *ngIf="slot.document"
+          class="status-chip"
+          [class.status-ready]="slot.document.embeddingStatus === 'READY'"
+          [class.status-pending]="slot.document.embeddingStatus === 'PENDING'"
+        >
+          {{ slot.document.embeddingStatus === 'READY' ? 'Embeddings listos' : 'Generando embeddings...' }}
+        </span>
+        <span *ngIf="!slot.document" class="status-chip status-empty">Sin configurar</span>
+
+        <p class="description-preview">
+          {{ slot.document?.description || 'Todavía no hay descripción para esta categoría.' }}
+        </p>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-button color="primary" (click)="edit(slot)" data-testid="btn-edit-knowledge">
+          {{ slot.document ? 'Editar' : 'Crear' }}
+        </button>
+        <button mat-button color="warn" *ngIf="slot.document" (click)="remove(slot)">Eliminar</button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

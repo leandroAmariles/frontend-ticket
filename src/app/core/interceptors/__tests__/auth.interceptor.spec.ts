@@ -7,47 +7,41 @@
  */
 
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpClient, HttpErrorResponse, HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthInterceptor } from '../auth.interceptor';
 import { AuthService } from '../../services/auth.service';
-import { AuthToken } from '../../models';
 
 describe('AuthInterceptor', () => {
   let httpClient: HttpClient;
   let httpMock: HttpTestingController;
-  let authService: AuthService;
-  let router: Router;
-  let interceptor: AuthInterceptor;
+  let authService: { getToken: jest.Mock; clearToken: jest.Mock };
+  let router: { navigate: jest.Mock; url: string };
 
   beforeEach(() => {
+    authService = {
+      getToken: jest.fn().mockReturnValue(null),
+      clearToken: jest.fn(),
+    };
+    router = {
+      navigate: jest.fn(),
+      url: '/tickets',
+    };
+
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [
-        AuthInterceptor,
-        {
-          provide: AuthService,
-          useValue: {
-            getToken: jasmine.createSpy('getToken').and.returnValue(null),
-            clearToken: jasmine.createSpy('clearToken'),
-          },
-        },
-        {
-          provide: Router,
-          useValue: {
-            navigate: jasmine.createSpy('navigate'),
-            url: '/tickets',
-          },
-        },
-      ],
-    });
+    imports: [],
+    providers: [
+        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+        { provide: AuthService, useValue: authService },
+        { provide: Router, useValue: router },
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+    ]
+});
 
     httpClient = TestBed.inject(HttpClient);
     httpMock = TestBed.inject(HttpTestingController);
-    authService = TestBed.inject(AuthService);
-    router = TestBed.inject(Router);
-    interceptor = TestBed.inject(AuthInterceptor);
   });
 
   afterEach(() => {
@@ -57,7 +51,7 @@ describe('AuthInterceptor', () => {
   describe('Authorization Header Injection', () => {
     it('should inject Authorization header when token exists', (done) => {
       const token = 'test-jwt-token-12345';
-      (authService.getToken as jasmine.Spy).and.returnValue(token);
+      authService.getToken.mockReturnValue(token);
 
       httpClient.get('/api/v1/tickets/all').subscribe(() => {
         done();
@@ -70,7 +64,7 @@ describe('AuthInterceptor', () => {
     });
 
     it('should not inject Authorization header when token is null', (done) => {
-      (authService.getToken as jasmine.Spy).and.returnValue(null);
+      authService.getToken.mockReturnValue(null);
 
       httpClient.get('/api/test').subscribe(() => {
         done();
@@ -83,7 +77,7 @@ describe('AuthInterceptor', () => {
 
     it('should format token correctly with Bearer scheme', (done) => {
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test';
-      (authService.getToken as jasmine.Spy).and.returnValue(token);
+      authService.getToken.mockReturnValue(token);
 
       httpClient.get('/api/v1/tickets/all').subscribe(() => {
         done();
@@ -110,67 +104,67 @@ describe('AuthInterceptor', () => {
   describe('401 Unauthorized Response Handling', () => {
     it('should clear token on 401 response', (done) => {
       const token = 'expired-token';
-      (authService.getToken as jasmine.Spy).and.returnValue(token);
+      authService.getToken.mockReturnValue(token);
 
-      httpClient.get('/api/v1/tickets/all').subscribe(
-        () => fail('should have errored'),
-        (error: HttpErrorResponse) => {
+      httpClient.get('/api/v1/tickets/all').subscribe({
+        next: () => done(new Error('should have errored')),
+        error: (error: HttpErrorResponse) => {
           expect(error.status).toBe(401);
           expect(authService.clearToken).toHaveBeenCalled();
           done();
-        }
-      );
+        },
+      });
 
       const req = httpMock.expectOne('/api/v1/tickets/all');
       req.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
     });
 
     it('should redirect to login on 401 response', (done) => {
-      (authService.getToken as jasmine.Spy).and.returnValue('token');
+      authService.getToken.mockReturnValue('token');
 
-      httpClient.get('/api/v1/tickets/all').subscribe(
-        () => fail('should have errored'),
-        (error: HttpErrorResponse) => {
+      httpClient.get('/api/v1/tickets/all').subscribe({
+        next: () => done(new Error('should have errored')),
+        error: () => {
           expect(router.navigate).toHaveBeenCalledWith(['/login'], {
             queryParams: { returnUrl: '/tickets' },
           });
           done();
-        }
-      );
+        },
+      });
 
       const req = httpMock.expectOne('/api/v1/tickets/all');
       req.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
     });
 
     it('should pass through 401 error after handling', (done) => {
-      (authService.getToken as jasmine.Spy).and.returnValue('token');
+      authService.getToken.mockReturnValue('token');
 
-      httpClient.get('/api/test').subscribe(
-        () => fail('should have errored'),
-        (error: HttpErrorResponse) => {
+      httpClient.get('/api/test').subscribe({
+        next: () => done(new Error('should have errored')),
+        error: (error: HttpErrorResponse) => {
           expect(error.status).toBe(401);
           expect(error.error?.message).toBe('Unauthorized');
           done();
-        }
-      );
+        },
+      });
 
       const req = httpMock.expectOne('/api/test');
       req.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
     });
 
     it('should include returnUrl parameter when redirecting to login', (done) => {
-      (authService.getToken as jasmine.Spy).and.returnValue('token');
+      authService.getToken.mockReturnValue('token');
 
-      httpClient.get('/api/admin/config').subscribe(
-        () => fail('should have errored'),
-        () => {
+      httpClient.get('/api/admin/config').subscribe({
+        next: () => done(new Error('should have errored')),
+        error: () => {
           expect(router.navigate).toHaveBeenCalled();
-          const args = (router.navigate as jasmine.Spy).calls.mostRecent().args;
+          const args = router.navigate.mock.calls[router.navigate.mock.calls.length - 1];
           expect(args[0]).toEqual(['/login']);
           expect(args[1].queryParams.returnUrl).toBe('/tickets');
           done();
-        }
-      );
+        },
+      });
 
       const req = httpMock.expectOne('/api/admin/config');
       req.flush({}, { status: 401, statusText: 'Unauthorized' });
@@ -179,60 +173,60 @@ describe('AuthInterceptor', () => {
 
   describe('Error Pass-Through', () => {
     it('should pass through 400 Bad Request errors', (done) => {
-      httpClient.get('/api/test').subscribe(
-        () => fail('should have errored'),
-        (error: HttpErrorResponse) => {
+      httpClient.get('/api/test').subscribe({
+        next: () => done(new Error('should have errored')),
+        error: (error: HttpErrorResponse) => {
           expect(error.status).toBe(400);
           expect(authService.clearToken).not.toHaveBeenCalled();
           done();
-        }
-      );
+        },
+      });
 
       const req = httpMock.expectOne('/api/test');
       req.flush({ error: 'Bad request' }, { status: 400, statusText: 'Bad Request' });
     });
 
     it('should pass through 403 Forbidden errors', (done) => {
-      (authService.getToken as jasmine.Spy).and.returnValue('token');
+      authService.getToken.mockReturnValue('token');
 
-      httpClient.get('/api/admin').subscribe(
-        () => fail('should have errored'),
-        (error: HttpErrorResponse) => {
+      httpClient.get('/api/admin').subscribe({
+        next: () => done(new Error('should have errored')),
+        error: (error: HttpErrorResponse) => {
           expect(error.status).toBe(403);
           expect(authService.clearToken).not.toHaveBeenCalled();
           expect(router.navigate).not.toHaveBeenCalled();
           done();
-        }
-      );
+        },
+      });
 
       const req = httpMock.expectOne('/api/admin');
       req.flush({}, { status: 403, statusText: 'Forbidden' });
     });
 
     it('should pass through 500 Server Error responses', (done) => {
-      (authService.getToken as jasmine.Spy).and.returnValue('token');
+      authService.getToken.mockReturnValue('token');
 
-      httpClient.get('/api/test').subscribe(
-        () => fail('should have errored'),
-        (error: HttpErrorResponse) => {
+      httpClient.get('/api/test').subscribe({
+        next: () => done(new Error('should have errored')),
+        error: (error: HttpErrorResponse) => {
           expect(error.status).toBe(500);
           expect(authService.clearToken).not.toHaveBeenCalled();
           done();
-        }
-      );
+        },
+      });
 
       const req = httpMock.expectOne('/api/test');
       req.flush({}, { status: 500, statusText: 'Internal Server Error' });
     });
 
     it('should pass through 503 Service Unavailable errors', (done) => {
-      httpClient.get('/api/test').subscribe(
-        () => fail('should have errored'),
-        (error: HttpErrorResponse) => {
+      httpClient.get('/api/test').subscribe({
+        next: () => done(new Error('should have errored')),
+        error: (error: HttpErrorResponse) => {
           expect(error.status).toBe(503);
           done();
-        }
-      );
+        },
+      });
 
       const req = httpMock.expectOne('/api/test');
       req.flush({}, { status: 503, statusText: 'Service Unavailable' });
@@ -241,7 +235,7 @@ describe('AuthInterceptor', () => {
 
   describe('Request Pass-Through', () => {
     it('should pass through successful GET requests', (done) => {
-      (authService.getToken as jasmine.Spy).and.returnValue('token');
+      authService.getToken.mockReturnValue('token');
 
       httpClient.get('/api/v1/tickets/all').subscribe((response) => {
         expect(response).toEqual({ items: [] });
@@ -253,7 +247,7 @@ describe('AuthInterceptor', () => {
     });
 
     it('should pass through successful POST requests', (done) => {
-      (authService.getToken as jasmine.Spy).and.returnValue('token');
+      authService.getToken.mockReturnValue('token');
 
       httpClient.post('/api/v1/tickets', { titulo: 'Test' }).subscribe((response) => {
         expect(response).toEqual({ id: '1', titulo: 'Test' });
@@ -265,7 +259,7 @@ describe('AuthInterceptor', () => {
     });
 
     it('should preserve request body for POST requests', (done) => {
-      (authService.getToken as jasmine.Spy).and.returnValue('token');
+      authService.getToken.mockReturnValue('token');
       const payload = { titulo: 'New Ticket', descripcion: 'Description' };
 
       httpClient.post('/api/v1/tickets', payload).subscribe(() => {
@@ -278,7 +272,7 @@ describe('AuthInterceptor', () => {
     });
 
     it('should preserve other headers in request', (done) => {
-      (authService.getToken as jasmine.Spy).and.returnValue('token');
+      authService.getToken.mockReturnValue('token');
 
       httpClient
         .get('/api/test', {
@@ -298,7 +292,7 @@ describe('AuthInterceptor', () => {
   describe('Token Refresh and Edge Cases', () => {
     it('should handle multiple consecutive requests with same token', (done) => {
       const token = 'same-token';
-      (authService.getToken as jasmine.Spy).and.returnValue(token);
+      authService.getToken.mockReturnValue(token);
 
       httpClient.get('/api/request1').subscribe(() => {
         httpClient.get('/api/request2').subscribe(() => {
@@ -315,11 +309,11 @@ describe('AuthInterceptor', () => {
 
     it('should handle token changes between requests', (done) => {
       const token1 = 'token-1';
-      (authService.getToken as jasmine.Spy).and.returnValue(token1);
+      authService.getToken.mockReturnValue(token1);
 
       httpClient.get('/api/request1').subscribe(() => {
         const token2 = 'token-2';
-        (authService.getToken as jasmine.Spy).and.returnValue(token2);
+        authService.getToken.mockReturnValue(token2);
 
         httpClient.get('/api/request2').subscribe(() => {
           done();
@@ -336,28 +330,31 @@ describe('AuthInterceptor', () => {
     });
 
     it('should handle empty token string', (done) => {
-      (authService.getToken as jasmine.Spy).and.returnValue('');
+      authService.getToken.mockReturnValue('');
 
       httpClient.get('/api/test').subscribe(() => {
         done();
       });
 
       const req = httpMock.expectOne('/api/test');
-      expect(req.request.headers.get('Authorization')).toBe('Bearer ');
+      // An empty string is falsy, so the interceptor does not add the header at all.
+      expect(req.request.headers.has('Authorization')).toBe(false);
       req.flush({});
     });
 
     it('should proceed with request even if clearToken throws', (done) => {
-      (authService.getToken as jasmine.Spy).and.returnValue('token');
-      (authService.clearToken as jasmine.Spy).and.throwError('Clear token failed');
+      authService.getToken.mockReturnValue('token');
+      authService.clearToken.mockImplementation(() => {
+        throw new Error('Clear token failed');
+      });
 
-      httpClient.get('/api/test').subscribe(
-        () => fail('should have errored'),
-        (error) => {
+      httpClient.get('/api/test').subscribe({
+        next: () => done(new Error('should have errored')),
+        error: (error) => {
           expect(error.status).toBe(401);
           done();
-        }
-      );
+        },
+      });
 
       const req = httpMock.expectOne('/api/test');
       req.flush({}, { status: 401, statusText: 'Unauthorized' });
@@ -366,20 +363,19 @@ describe('AuthInterceptor', () => {
 
   describe('Logging and Debugging', () => {
     it('should log 401 errors for debugging', (done) => {
-      spyOn(console, 'warn');
-      (authService.getToken as jasmine.Spy).and.returnValue('token');
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      authService.getToken.mockReturnValue('token');
 
-      httpClient.get('/api/test').subscribe(
-        () => fail('should have errored'),
-        () => {
-          expect(console.warn).toHaveBeenCalledWith('Session expired. Please login again.');
+      httpClient.get('/api/test').subscribe({
+        next: () => done(new Error('should have errored')),
+        error: () => {
+          expect(warnSpy).toHaveBeenCalledWith('Session expired. Please login again.');
           done();
-        }
-      );
+        },
+      });
 
       const req = httpMock.expectOne('/api/test');
       req.flush({}, { status: 401, statusText: 'Unauthorized' });
     });
   });
 });
-

@@ -5,7 +5,7 @@
     <button
       mat-raised-button
       color="primary"
-      (click)="navigateToCreate()"
+      (click)="openCreateDialog()"
       data-testid="btn-new-ticket"
       class="btn-new-ticket"
       aria-label="Create a new support ticket"
@@ -14,6 +14,8 @@
       + New Ticket
     </button>
   </div>
+
+  <app-ticket-stats-cards></app-ticket-stats-cards>
 
   <!-- Error state with retry button -->
   <div *ngIf="error$ | async as error" class="error-section" role="alert" aria-live="polite" aria-atomic="true">
@@ -35,39 +37,31 @@
     </mat-card>
   </div>
 
-  <!-- Loading state -->
-  <div *ngIf="loading$ | async" class="loading-state" role="status" aria-live="polite">
-    <mat-spinner
-      diameter="50"
-      aria-label="Loading tickets, please wait..."
-    ></mat-spinner>
-    <p class="loading-text">Loading tickets...</p>
-  </div>
-
-  <!-- Tickets table (shown only when not loading and no error) -->
-  <div *ngIf="(loading$ | async) === false && (error$ | async) === null" class="table-container">
-    <!-- Empty state -->
-    <div *ngIf="(tickets$ | async)?.length === 0" class="empty-state">
-      <p>No tickets found.</p>
-      <button mat-button (click)="navigateToCreate()">Create your first ticket</button>
+  <!--
+    Table container: always rendered once there is no error.
+    The loading spinner is shown INSIDE the tickets-table component
+    so the paginator is never destroyed between pagination requests.
+  -->
+  <div *ngIf="(error$ | async) === null" class="table-container">
+    <!-- Initial loading state (no data yet) -->
+    <div *ngIf="(loading$ | async) && (pagination$ | async) === null" class="loading-state" role="status" aria-live="polite">
+      <mat-spinner diameter="50" aria-label="Loading tickets, please wait..."></mat-spinner>
+      <p class="loading-text">Loading tickets...</p>
     </div>
 
-    <!-- Tickets table -->
-    <app-tickets-table
-      *ngIf="(tickets$ | async) as tickets; else noTickets"
-      [tickets]="tickets"
-      [pagination]="(pagination$ | async)"
-      (pageChange)="onPageChange($event)"
-      [dataTestId]="'tickets-table'"
-    ></app-tickets-table>
-
-    <ng-template #noTickets>
-      <div class="text-center py-8">
-        <p>No tickets to display</p>
-      </div>
-    </ng-template>
+    <!-- Tickets table — keep alive during reload so paginator state is preserved -->
+    <ng-container *ngIf="(pagination$ | async) as pagination">
+      <app-tickets-table
+        [tickets]="(tickets$ | async) ?? []"
+        [pagination]="pagination"
+        [isLoading]="(loading$ | async) ?? false"
+        [attemptedPageSize]="(attemptedPageSize$ | async)"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
+        (createTicket)="openCreateDialog()"
+        [dataTestId]="'tickets-table'"
+      ></app-tickets-table>
+    </ng-container>
   </div>
 </div>
-
-
 

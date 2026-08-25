@@ -2,9 +2,10 @@ import { Component, Output, EventEmitter } from '@angular/core';
 import { FormGroup, FormBuilder } from '@angular/forms';
 
 @Component({
-  selector: 'app-ticket-filters',
-  templateUrl: './ticket-filters.component.html',
-  styleUrls: ['./ticket-filters.component.scss'],
+    selector: 'app-ticket-filters',
+    templateUrl: './ticket-filters.component.html',
+    styleUrls: ['./ticket-filters.component.scss'],
+    standalone: false
 })
 export class TicketFiltersComponent {
   @Output() filtersChange = new EventEmitter<{

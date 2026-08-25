@@ -1,13 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';import { catchError, map } from 'rxjs/operators';
 
 import {
-  Ticket,
-  TicketsListParams,
   TicketsResponse,
   CreateTicketPayload,
+  CreateTicketResponse,
 } from '../models';
 import { ErrorHandlerService } from '../../core/services/error-handler.service';
 import { validateTicketsArray, formatValidationErrors } from '../utils/ticket-validators';
@@ -81,7 +79,9 @@ import { validateTicketsArray, formatValidationErrors } from '../utils/ticket-va
 })
 export class TicketsApiService {
   private readonly API_BASE_URL = 'http://localhost:8080';
-  private readonly TICKETS_ENDPOINT = '/api/v1/tickets/all';
+  private readonly TICKETS_ALL_ENDPOINT = '/api/v1/tickets/all';
+  private readonly TICKETS_ENDPOINT = '/api/v1/tickets';
+  private readonly CREATE_TICKET_ENDPOINT = '/api/tickets';
 
   constructor(
     private http: HttpClient,
@@ -89,15 +89,9 @@ export class TicketsApiService {
   ) {}
 
   /**
-   * Fetch tickets from the backend API
-   *
+   * Fetch all tickets (dashboard - operators)
    * Endpoint: GET /api/v1/tickets/all
-   * Query params: page (default 0), size (default 20)
-   *
-   * @param page - Page number (0-indexed), defaults to 0
-   * @param size - Page size, defaults to 20
-   * @returns Observable<TicketsResponse> containing paginated tickets
-   * @throws HttpErrorResponse if the request fails
+   * Query params: page (0-indexed), size (1-100)
    */
   getTickets(page = 0, size = 20): Observable<TicketsResponse> {
     let httpParams = new HttpParams();
@@ -105,33 +99,73 @@ export class TicketsApiService {
     httpParams = httpParams.set('size', size.toString());
 
     return this.http
-      .get<TicketsResponse>(`${this.API_BASE_URL}${this.TICKETS_ENDPOINT}`, {
+      .get<any>(`${this.API_BASE_URL}${this.TICKETS_ALL_ENDPOINT}`, {
         params: httpParams,
       })
       .pipe(
-        map((response: any) => {
-          // Ensure response has the expected structure
-          return this.validateAndTransformResponse(response);
-        }),
-        catchError((error: HttpErrorResponse) => {
-          return this.handleError(error);
-        })
+        map((response: any) => this.validateAndTransformResponse(response)),
+        catchError((error: HttpErrorResponse) => this.handleError(error))
       );
   }
 
   /**
-   * Create a new ticket (placeholder for future implementation)
-   * NOTE: This feature is out of scope for the 002-consume-backend-api feature
-   *
-   * @param payload - Ticket creation payload
-   * @returns Observable<Ticket> - Created ticket
+   * Fetch tickets for the authenticated user
+   * Endpoint: GET /api/v1/tickets
+   * Query params: page (0-indexed), size (1-100)
    */
-  createTicket(payload: CreateTicketPayload): Observable<Ticket> {
-    // TODO: Implement ticket creation endpoint
-    return throwError(() => ({
-      message: 'Ticket creation is not yet implemented',
-      status: 501,
-    }));
+  getUserTickets(page = 0, size = 20): Observable<TicketsResponse> {
+    let httpParams = new HttpParams();
+    httpParams = httpParams.set('page', page.toString());
+    httpParams = httpParams.set('size', size.toString());
+
+    return this.http
+      .get<any>(`${this.API_BASE_URL}${this.TICKETS_ENDPOINT}`, {
+        params: httpParams,
+      })
+      .pipe(
+        map((response: any) => this.validateAndTransformResponse(response)),
+        catchError((error: HttpErrorResponse) => this.handleError(error))
+      );
+  }
+
+  /**
+   * Get the total count of tickets matching an optional status/date filter,
+   * without fetching a full page of items. Used to power KPI stat cards.
+   * Reuses GET /api/v1/tickets/all (which already supports these filters
+   * server-side) with size=1 and reads the `total` field from the response.
+   *
+   * @param filter - optional { status: 'PENDING' | 'CREATED', createdAfter: ISO-8601 }
+   */
+  getTicketsCount(filter: { status?: string; createdAfter?: string } = {}): Observable<number> {
+    let httpParams = new HttpParams().set('page', '0').set('size', '1');
+    if (filter.status) {
+      httpParams = httpParams.set('status', filter.status);
+    }
+    if (filter.createdAfter) {
+      httpParams = httpParams.set('createdAfter', filter.createdAfter);
+    }
+
+    return this.http
+      .get<any>(`${this.API_BASE_URL}${this.TICKETS_ALL_ENDPOINT}`, { params: httpParams })
+      .pipe(
+        map((response: any) => response.total ?? 0),
+        catchError((error: HttpErrorResponse) => this.handleError(error))
+      );
+  }
+
+  /**
+   * Create a new ticket
+   * Endpoint: POST /api/tickets
+   * Response: 202 ACCEPTED with { messageId, status, timestamp }
+   *
+   * @param payload - { fecha, titulo, descripcion }
+   */
+  createTicket(payload: CreateTicketPayload): Observable<CreateTicketResponse> {
+    return this.http
+      .post<CreateTicketResponse>(`${this.API_BASE_URL}${this.CREATE_TICKET_ENDPOINT}`, payload)
+      .pipe(
+        catchError((error: HttpErrorResponse) => this.handleError(error))
+      );
   }
 
   /**
@@ -143,7 +177,6 @@ export class TicketsApiService {
    * @throws Error if validation fails
    */
   private validateAndTransformResponse(response: any): TicketsResponse {
-    // Validate response structure
     if (!response.items || !Array.isArray(response.items)) {
       throw new Error('Invalid API response: missing or invalid "items" field');
     }
@@ -159,12 +192,36 @@ export class TicketsApiService {
       throw new Error(`Invalid ticket data in response: ${errorMessage}`);
     }
 
+    // Map items and preserve all fields from backend (including optional ones)
+    const mappedItems = response.items.map((item: any) => ({
+      id: item.id,
+      titulo: item.titulo,
+      descripcion: item.descripcion,
+      status: item.status,
+      creatorId: item.creatorId || null,
+      fecha: item.fecha,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+      ticketType: item.ticketType,
+      severity: item.severity,
+      priority: item.priority,
+    }));
+
+    // DEBUG: Log first ticket to verify severity field is being mapped
+    if (mappedItems.length > 0) {
+      console.debug('[TicketsApiService] First mapped ticket:', {
+        id: mappedItems[0].id,
+        ticketType: mappedItems[0].ticketType,
+        severity: mappedItems[0].severity,
+      });
+    }
+
     return {
-      items: response.items,
+      items: mappedItems,
       page: response.page,
       size: response.size,
-      total: response.total || 0,
-      totalPages: response.totalPages || 0,
+      total: response.total ?? 0,
+      totalPages: response.totalPages ?? 0,
     };
   }
 
@@ -175,7 +232,21 @@ export class TicketsApiService {
    * @param error - HttpErrorResponse from failed request
    * @returns Observable that throws user-friendly error
    */
-  private handleError(error: HttpErrorResponse): Observable<never> {
+  private handleError(error: HttpErrorResponse | Error): Observable<never> {
+    // Client-side validation errors (thrown by validateAndTransformResponse,
+    // not returned by the HTTP layer) aren't HttpErrorResponses — surface
+    // their own message instead of falling through to "Unknown error" below.
+    if (!(error instanceof HttpErrorResponse)) {
+      this.logErrorContext({
+        endpoint: this.TICKETS_ALL_ENDPOINT,
+        statusCode: undefined,
+        timestamp: new Date().toISOString(),
+        userMessage: error.message,
+        error,
+      });
+      return throwError(() => ({ status: undefined, message: error.message, originalError: error }));
+    }
+
     let errorMessage: string;
 
     if (error.status === 401) {
@@ -199,7 +270,7 @@ export class TicketsApiService {
 
     // Log error with context for debugging
     this.logErrorContext({
-      endpoint: this.TICKETS_ENDPOINT,
+      endpoint: this.TICKETS_ALL_ENDPOINT,
       statusCode: error.status,
       timestamp: new Date().toISOString(),
       userMessage: errorMessage,

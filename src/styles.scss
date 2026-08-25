@@ -1,9 +1,96 @@
 /* Global Styles */
+@use '@angular/material' as mat;
+
+@include mat.elevation-classes();
+@include mat.app-background();
+
+$app-primary: mat.m2-define-palette(mat.$m2-indigo-palette);
+$app-accent: mat.m2-define-palette(mat.$m2-teal-palette, 600, 400, 800);
+$app-warn: mat.m2-define-palette(mat.$m2-red-palette);
+
+$app-light-theme: mat.m2-define-light-theme(
+  (
+    color: (
+      primary: $app-primary,
+      accent: $app-accent,
+      warn: $app-warn,
+    ),
+    density: 0,
+  )
+);
+
+$app-dark-theme: mat.m2-define-dark-theme(
+  (
+    color: (
+      primary: $app-primary,
+      accent: $app-accent,
+      warn: $app-warn,
+    ),
+    density: 0,
+  )
+);
+
+@include mat.all-component-themes($app-light-theme);
+
+.dark-theme {
+  @include mat.all-component-colors($app-dark-theme);
+}
+
+/* Design tokens — consumed by both Material and custom components */
+:root {
+  --app-bg: #f4f6f8;
+  --app-surface: #ffffff;
+  --app-surface-elevated: #ffffff;
+  --app-border: rgba(0, 0, 0, 0.08);
+  --app-text-primary: rgba(0, 0, 0, 0.87);
+  --app-text-secondary: rgba(0, 0, 0, 0.6);
+
+  --app-radius-sm: 8px;
+  --app-radius-md: 12px;
+  --app-radius-lg: 16px;
+
+  --app-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --app-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  --app-spacing-xs: 4px;
+  --app-spacing-sm: 8px;
+  --app-spacing-md: 16px;
+  --app-spacing-lg: 24px;
+  --app-spacing-xl: 32px;
+
+  --app-success: #2e7d32;
+  --app-success-bg: #e8f5e9;
+  --app-error: #c62828;
+  --app-error-bg: #ffebee;
+  --app-warning: #b26a00;
+  --app-warning-bg: #fff3e0;
+}
+
+.dark-theme {
+  --app-bg: #121212;
+  --app-surface: #1e1e1e;
+  --app-surface-elevated: #262626;
+  --app-border: rgba(255, 255, 255, 0.12);
+  --app-text-primary: rgba(255, 255, 255, 0.92);
+  --app-text-secondary: rgba(255, 255, 255, 0.6);
+
+  --app-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
+  --app-shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5);
+
+  --app-success: #66bb6a;
+  --app-success-bg: rgba(102, 187, 106, 0.15);
+  --app-error: #ef5350;
+  --app-error-bg: rgba(239, 83, 80, 0.15);
+  --app-warning: #ffb74d;
+  --app-warning-bg: rgba(255, 183, 77, 0.15);
+}
+
 * {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -14,11 +101,13 @@ html, body {
 }
 
 body {
-  background-color: #f5f5f5;
+  background-color: var(--app-bg);
+  color: var(--app-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 a {
-  color: #1976d2;
+  color: mat.m2-get-color-from-palette($app-primary);
   text-decoration: none;
 
   &:hover {
@@ -32,4 +121,3 @@ select,
 textarea {
   font-family: inherit;
 }
-
