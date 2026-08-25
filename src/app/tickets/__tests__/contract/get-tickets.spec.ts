@@ -5,12 +5,13 @@
  * TicketsApiService.getTickets and models/index.ts).
  */
 
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
 import { TicketsApiService } from '../../services/tickets-api.service';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 import { TicketsResponse } from '../../models';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 const BASE_URL = 'http://localhost:8080/api/v1/tickets/all';
 
@@ -20,9 +21,9 @@ describe('GET /api/v1/tickets/all - Contract Tests', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [TicketsApiService, ErrorHandlerService],
-    });
+    imports: [],
+    providers: [TicketsApiService, ErrorHandlerService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+});
 
     service = TestBed.inject(TicketsApiService);
     httpMock = TestBed.inject(HttpTestingController);

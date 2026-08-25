@@ -7,11 +7,12 @@
  */
 
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AuthService } from '../../../core/services/auth.service';
 import { TicketsApiService } from '../../services/tickets-api.service';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('Error Recovery and Retry Flow Integration (T043)', () => {
   let authService: AuthService;
@@ -21,9 +22,9 @@ describe('Error Recovery and Retry Flow Integration (T043)', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule, RouterTestingModule],
-      providers: [AuthService, TicketsApiService, ErrorHandlerService],
-    });
+    imports: [RouterTestingModule],
+    providers: [AuthService, TicketsApiService, ErrorHandlerService, provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+});
 
     authService = TestBed.inject(AuthService);
     ticketsApiService = TestBed.inject(TicketsApiService);

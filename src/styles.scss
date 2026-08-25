@@ -3,11 +3,11 @@
 
 @include mat.core();
 
-$app-primary: mat.define-palette(mat.$indigo-palette);
-$app-accent: mat.define-palette(mat.$teal-palette, 600, 400, 800);
-$app-warn: mat.define-palette(mat.$red-palette);
+$app-primary: mat.m2-define-palette(mat.$m2-indigo-palette);
+$app-accent: mat.m2-define-palette(mat.$m2-teal-palette, 600, 400, 800);
+$app-warn: mat.m2-define-palette(mat.$m2-red-palette);
 
-$app-light-theme: mat.define-light-theme(
+$app-light-theme: mat.m2-define-light-theme(
   (
     color: (
       primary: $app-primary,
@@ -18,7 +18,7 @@ $app-light-theme: mat.define-light-theme(
   )
 );
 
-$app-dark-theme: mat.define-dark-theme(
+$app-dark-theme: mat.m2-define-dark-theme(
   (
     color: (
       primary: $app-primary,
@@ -106,7 +106,7 @@ body {
 }
 
 a {
-  color: mat.get-color-from-palette($app-primary);
+  color: mat.m2-get-color-from-palette($app-primary);
   text-decoration: none;
 
   &:hover {

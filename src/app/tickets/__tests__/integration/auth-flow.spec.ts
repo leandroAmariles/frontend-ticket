@@ -7,9 +7,9 @@
  */
 
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { AuthInterceptor } from '../../../core/interceptors/auth.interceptor';
@@ -23,14 +23,16 @@ describe('Auth → Tickets Flow Integration (T042)', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule, RouterTestingModule],
-      providers: [
+    imports: [RouterTestingModule],
+    providers: [
         AuthService,
         TicketsApiService,
         ErrorHandlerService,
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-      ],
-    });
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+    ]
+});
 
     authService = TestBed.inject(AuthService);
     ticketsApiService = TestBed.inject(TicketsApiService);
